@@ -107,7 +107,7 @@ CREATE OR REPLACE PACKAGE "PAC_CALCULA_TEMPO_ATIVO" as
   PARAM_DIAS_FALTAS         NUMBER :=180;
   v_erro exception;
 
----------------------- variaveis colec?o lp ------------------
+---------------------- variaveis coleção lp ------------------
 type typ_rec_dias_lp is record
   (DATA_CALCULO     date,
    COD_INS          tb_contagem_servidor.cod_ins%type,
@@ -168,7 +168,7 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
          ) QTD_LIQUIDO
           FROM (
 
-         -- Tabela de Contagem  Dias da Evolucacao Funcional
+         -- Tabela de Contagem  Dias da Evolucaçao Funcional
         ---- Dias Bruto -----
         SELECT 'BRUTO' as Tipo,
                COD_ENTIDADE,
@@ -212,17 +212,25 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                    AND RF.COD_IDE_REL_FUNC           = EF.COD_IDE_REL_FUNC
                    AND RF.COD_IDE_CLI                = EF.COD_IDE_CLI
                    AND RF.COD_ENTIDADE               = EF.COD_ENTIDADE
-                   --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                   --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                    AND RF.COD_VINCULO                not in  ('22', '5', '6')
                    AND EF.FLG_STATUS                 ='V'
                    AND A.DATA_CALCULO <=PAR_DAT_CONTAGEM
                    AND A.DATA_CALCULO >= EF.DAT_INI_EFEITO
                    AND A.DATA_CALCULO <= NVL(EF.DAT_FIM_EFEITO, PAR_DAT_CONTAGEM)
 
-                   --Yumi em 02/05/2018: Precisa colocar a regra do vinculo que nao considera
+                   --Yumi em 02/05/2018: Precisa colocar a regra do vínculo que nao considera
                    --AND RF.COD_IDE_REL_FUNC NOT IN (94101, 213901 )
-
-                   --YUMI EM 01/05/2018: INCLUIDO PARA PEGAR VINCULOS ANTERIORES DA RELACAO FUNCIONAL
+                   
+                    
+                   --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                   --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                   --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                    AND (A.DATA_CALCULO < '28/05/2020' OR A.DATA_CALCULO > '31/12/2021')
+                   
+                   
+                   --YUMI EM 01/05/2018: INCLUÍDO PARA PEGAR VÍNCULOS ANTERIORES DA RELACAO FUNCIONAL
                    union
 
                    SELECT distinct
@@ -250,15 +258,21 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                    AND RF.COD_IDE_REL_FUNC           = EF.COD_IDE_REL_FUNC
                    AND RF.COD_IDE_CLI                = EF.COD_IDE_CLI
                    AND RF.COD_ENTIDADE               = EF.COD_ENTIDADE
-                   --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                   --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                    AND RF.COD_VINCULO                not in  ('22', '5', '6')
                    AND EF.FLG_STATUS                 ='V'
                    AND A.DATA_CALCULO <=PAR_DAT_CONTAGEM
                    AND A.DATA_CALCULO >= EF.DAT_INI_EFEITO
                    AND A.DATA_CALCULO <= NVL(EF.DAT_FIM_EFEITO, RF.DAT_FIM_EXERC)
-                   --Yumi em 02/05/2018: Precisa colocar a regra do vinculo que nao considera
+                   --Yumi em 02/05/2018: Precisa colocar a regra do vínculo que nao considera
                    --AND RF.COD_IDE_REL_FUNC NOT IN (94101, 213901 )
-
+                   
+                   --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                   --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                   --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                    AND (A.DATA_CALCULO < '28/05/2020' OR A.DATA_CALCULO > '31/12/2021')
+                   
                    )
 
 
@@ -314,6 +328,11 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                    AND AA.DATA_CALCULO <=PAR_DAT_CONTAGEM
                    AND AA.DATA_CALCULO >= T.DAT_ADM_ORIG
                    AND AA.DATA_CALCULO <= NVL(T.DAT_DESL_ORIG, PAR_DAT_CONTAGEM)
+                   --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                   --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                   --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                    AND (AA.DATA_CALCULO < '28/05/2020' OR AA.DATA_CALCULO > '31/12/2021')
 
                    AND NOT EXISTS
                  (
@@ -325,8 +344,8 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                          WHERE
                                 RF.COD_INS                    = 1
                            AND RF.COD_IDE_CLI                = PAR_COD_IDE_CLI
-                           --Yumi em 01/05/2018: comentado para remover concomitancia
-                           ---com qualquer vinculo que exista na relacao funcional
+                           --Yumi em 01/05/2018: comentado para remover concomitância
+                           ---com qualquer vínculo que exista na relacao funcional
                            ---AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                            --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                            ---AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
@@ -335,17 +354,23 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                            AND RF.COD_IDE_REL_FUNC           = EF.COD_IDE_REL_FUNC
                            AND RF.COD_IDE_CLI                = EF.COD_IDE_CLI
                            AND RF.COD_ENTIDADE               = EF.COD_ENTIDADE
-                           --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                           --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                            AND RF.COD_VINCULO                not in  ('22', '5', '6')
                            AND A.DATA_CALCULO <=PAR_DAT_CONTAGEM
                            AND A.DATA_CALCULO >= EF.DAT_INI_EFEITO
                            ---Yumi em 02/05/201*: ajustado pois nao estava pegando tempos averrbados
-                           --entre periodos de vinculos
+                           --entre períodos de vínculos
                            --AND A.DATA_CALCULO <= NVL(EF.DAT_FIM_EFEITO, SYSDATE)
                            AND A.DATA_CALCULO <= NVL(RF.DAT_FIM_EXERC, PAR_DAT_CONTAGEM)
                            AND AA.DATA_CALCULO = A.DATA_CALCULO
-                        --Yumi em 23/07/2018: incluido o status da evolucao para pegar somente vigente.
+                        --Yumi em 23/07/2018: incluído o status da evolucao para pegar somente vigente.
                         AND EF.FLG_STATUS = 'V'
+                        
+                        --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                   --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                   --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                    AND (A.DATA_CALCULO < '28/05/2020' OR A.DATA_CALCULO > '31/12/2021')
                         )
 
                 )
@@ -392,8 +417,8 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                  WHERE
                        RF.COD_INS                    = PAR_COD_INS
                    AND RF.COD_IDE_CLI                = PAR_COD_IDE_CLI
-                   ---Yumi em 01/05/2018: comentado para verificar licenca
-                   --de qualquer vinculo da relacao funcional
+                   ---Yumi em 01/05/2018: comentado para verificar licença
+                   --de qualquer vínculo da relacao funcional
                    ---AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                    --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                    ---AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
@@ -402,7 +427,7 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                    AND RF.COD_IDE_CLI             = T.COD_IDE_CLI
                    AND RF.NUM_MATRICULA           = T.NUM_MATRICULA
                    AND RF.COD_IDE_REL_FUNC        = T.COD_IDE_REL_FUNC
-                   --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                   --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                    AND RF.COD_VINCULO                not in  ('22', '5', '6')
                       ------------------------------------------
                    AND AA.DATA_CALCULO <=PAR_DAT_CONTAGEM
@@ -411,6 +436,12 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                    AND MO.COD_MOT_AFAST = T.COD_MOT_AFAST
                    AND MO.AUMENTA_CONT_ATS = 'S'
                    AND MO.COD_AGRUP_AFAST = 2
+                   
+                   --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                   --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                   --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                    AND (AA.DATA_CALCULO < '28/05/2020' OR AA.DATA_CALCULO > '31/12/2021')
 
                 )
 
@@ -455,8 +486,8 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                  WHERE
                        RF.COD_INS                    = PAR_COD_INS
                    AND RF.COD_IDE_CLI                = PAR_COD_IDE_CLI
-                   ---Yumi em 01/05/2018: comentado para verificar licenca
-                   --de qualquer vinculo da relacao funcional
+                   ---Yumi em 01/05/2018: comentado para verificar licença
+                   --de qualquer vínculo da relacao funcional
                    --AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                    --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                    --AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
@@ -465,7 +496,7 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                    AND RF.COD_IDE_CLI             = T.COD_IDE_CLI
                    AND RF.NUM_MATRICULA           = T.NUM_MATRICULA
                    AND RF.COD_IDE_REL_FUNC        = T.COD_IDE_REL_FUNC
-                   --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                   --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                    AND RF.COD_VINCULO                not in  ('22', '5', '6')
                       ------------------------------------------
                    AND AA.DATA_CALCULO <=PAR_DAT_CONTAGEM
@@ -474,6 +505,12 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                    AND MO.COD_MOT_AFAST = T.COD_MOT_AFAST
                    AND MO.AUMENTA_CONT_ATS = 'S'
                    AND MO.COD_AGRUP_AFAST = 1
+                   
+                   --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                   --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                   --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                    AND (AA.DATA_CALCULO < '28/05/2020' OR AA.DATA_CALCULO > '31/12/2021')
 
                 )
 
@@ -517,8 +554,8 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                  WHERE
                        RF.COD_INS                    = PAR_COD_INS
                    AND RF.COD_IDE_CLI                = PAR_COD_IDE_CLI
-                   ---Yumi em 01/05/2018: comentado para verificar licenca
-                   --de qualquer vinculo da relacao funcional
+                   ---Yumi em 01/05/2018: comentado para verificar licença
+                   --de qualquer vínculo da relacao funcional
                    --AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                    --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                    --AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
@@ -527,7 +564,7 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                    AND RF.COD_IDE_CLI                = T.COD_IDE_CLI
                    AND RF.NUM_MATRICULA              = T.NUM_MATRICULA
                    AND RF.COD_IDE_REL_FUNC           = T.COD_IDE_REL_FUNC
-                   --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                   --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                    AND RF.COD_VINCULO                not in  ('22', '5', '6')
                       ------------------------------------------
                    AND AA.DATA_CALCULO                <=PAR_DAT_CONTAGEM
@@ -536,6 +573,11 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                    AND MO.COD_MOT_AFAST                = T.COD_MOT_AFAST
                    AND MO.AUMENTA_CONT_ATS             = 'S'
                    AND MO.COD_AGRUP_AFAST              = 3
+                   --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                   --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                   --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                    AND (AA.DATA_CALCULO < '28/05/2020' OR AA.DATA_CALCULO > '31/12/2021')
 
                 )
 
@@ -579,12 +621,12 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                  WHERE
                        RF.COD_INS                    = PAR_COD_INS
                    AND RF.COD_IDE_CLI                = PAR_COD_IDE_CLI
-                   ---Yumi em 01/05/2018: comentado para verificar licenca
-                   --de qualquer vinculo da relacao funcional
+                   ---Yumi em 01/05/2018: comentado para verificar licença
+                   --de qualquer vínculo da relacao funcional
                    --AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                    --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                    --AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
-                   --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                   --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                    AND RF.COD_VINCULO                not in  ('22', '5', '6')
                       ------------------------------------------
                    AND RF.COD_INS                 = T.COD_INS
@@ -598,6 +640,12 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                    AND MO.COD_MOT_AFAST = T.COD_MOT_AFAST
                    AND MO.AUMENTA_CONT_ATS = 'S'
                    AND MO.COD_AGRUP_AFAST = 4
+                   
+                   --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                   --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                   --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                    AND (AA.DATA_CALCULO < '28/05/2020' OR AA.DATA_CALCULO > '31/12/2021')
 
                 )
 
@@ -641,12 +689,12 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                   WHERE
                        RF.COD_INS                    = PAR_COD_INS
                    AND RF.COD_IDE_CLI                = PAR_COD_IDE_CLI
-                   ---Yumi em 01/05/2018: comentado para verificar licenca
-                   --de qualquer vinculo da relacao funcional
+                   ---Yumi em 01/05/2018: comentado para verificar licença
+                   --de qualquer vínculo da relacao funcional
                    --AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                    --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                    --AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
-                   --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                   --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                    AND RF.COD_VINCULO                not in  ('22', '5', '6')
                       ------------------------------------------
                    AND RF.COD_INS                 = T.COD_INS
@@ -660,6 +708,12 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                    AND MO.COD_MOT_AFAST = T.COD_MOT_AFAST
                    AND MO.AUMENTA_CONT_ATS = 'S'
                    AND MO.COD_AGRUP_AFAST = 5
+                   
+                   --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                   --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                   --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                    AND (AA.DATA_CALCULO < '28/05/2020' OR AA.DATA_CALCULO > '31/12/2021')
 
                 )
 
@@ -706,12 +760,12 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                  WHERE
                        RF.COD_INS                    = PAR_COD_INS
                    AND RF.COD_IDE_CLI                = PAR_COD_IDE_CLI
-                   ---Yumi em 01/05/2018: comentado para verificar licenca
-                   --de qualquer vinculo da relacao funcional
+                   ---Yumi em 01/05/2018: comentado para verificar licença
+                   --de qualquer vínculo da relacao funcional
                    --AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                    --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                    --AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
-                   --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                   --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                    AND RF.COD_VINCULO                not in  ('22', '5', '6')
                       ------------------------------------------
                    AND RF.COD_INS                 = T.COD_INS
@@ -724,6 +778,11 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                    AND AA.DATA_CALCULO <= NVL(T.DAT_RET_PREV, PAR_DAT_CONTAGEM)
                    AND MO.COD_MOT_AFAST = T.COD_MOT_AFAST
                    AND MO.AUMENTA_CONT_ATS = 'S'
+                   --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                   --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                   --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                    AND (AA.DATA_CALCULO < '28/05/2020' OR AA.DATA_CALCULO > '31/12/2021')
 
                    AND NOT EXISTS
                  (SELECT 1
@@ -732,7 +791,7 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                                tb_dias_apoio         A,
                                tb_motivo_afastamento MO
                          WHERE RF.COD_INS               = PAR_COD_INS
-                         --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                         --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                           AND RF.COD_VINCULO                not in  ('22', '5', '6')
                            --AND RF.COD_ENTIDADE          = PAR_COD_ENTIDADE
                            --AND RF.NUM_MATRICULA         = PAR_NUM_MATRICULA
@@ -755,6 +814,12 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                            AND MO.AUMENTA_CONT_ATS = 'S'
                            AND NVL(MO.COD_AGRUP_AFAST, 0) IN (1, 2, 3, 4, 5)
                            AND AA.DATA_CALCULO = A.DATA_CALCULO
+                           
+                           --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                   --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                   --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                    AND (A.DATA_CALCULO < '28/05/2020' OR A.DATA_CALCULO > '31/12/2021')
 
                         )
 
@@ -767,8 +832,8 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                   to_char(DATA_CALCULO, 'yyyy')
 
          union
-         ---Yumi em 01/05/2018: incluido para descontar os dias de descontos
-         ---relacionados ao historico de tempos averbados
+         ---Yumi em 01/05/2018: incluído para descontar os dias de descontos
+         ---relacionados ao histórico de tempos averbados
          select
                'OUTRO' as Tipo,
                COD_ENTIDADE,
@@ -806,7 +871,7 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                    AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                    AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                    AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
-                   --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                   --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                    AND RF.COD_VINCULO                not in  ('22', '5', '6')
                   ------------------------------------------------------
                    AND T1.COD_INS                    =  RF.COD_INS
@@ -816,6 +881,12 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                    AND AA.DATA_CALCULO <=PAR_DAT_CONTAGEM
                    AND AA.DATA_CALCULO >= T1.DAT_ADM_ORIG
                    AND AA.DATA_CALCULO <= NVL(T1.DAT_DESL_ORIG, PAR_DAT_CONTAGEM)
+                   
+                   --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                   --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                   --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                    AND (AA.DATA_CALCULO < '28/05/2020' OR AA.DATA_CALCULO > '31/12/2021')
                    AND NOT EXISTS
                  (
 
@@ -826,8 +897,8 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                          WHERE
                                 RF.COD_INS                    = 1
                            AND RF.COD_IDE_CLI                = PAR_COD_IDE_CLI
-                           --Yumi em 01/05/2018: comentado para remover concomitancia
-                           ---com qualquer vinculo que exista na relacao funcional
+                           --Yumi em 01/05/2018: comentado para remover concomitância
+                           ---com qualquer vínculo que exista na relacao funcional
                            ---AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                            --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                            ---AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
@@ -836,12 +907,18 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                            AND RF.COD_IDE_REL_FUNC           = EF.COD_IDE_REL_FUNC
                            AND RF.COD_IDE_CLI                = EF.COD_IDE_CLI
                            AND RF.COD_ENTIDADE               = EF.COD_ENTIDADE
-                           --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                           --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                            AND RF.COD_VINCULO                not in  ('22', '5', '6')
                            AND A.DATA_CALCULO <=PAR_DAT_CONTAGEM
                            AND A.DATA_CALCULO >= EF.DAT_INI_EFEITO
                            AND A.DATA_CALCULO <= NVL(RF.DAT_FIM_EXERC, PAR_DAT_CONTAGEM)
                            AND AA.DATA_CALCULO = A.DATA_CALCULO
+                           
+                           --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                   --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                   --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                    AND (A.DATA_CALCULO < '28/05/2020' OR A.DATA_CALCULO > '31/12/2021')
 
                         )
 
@@ -890,7 +967,7 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                    AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                    AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                    AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
-                   --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                   --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                    AND RF.COD_VINCULO                not in  ('22', '5', '6')
                ----------------------------------------------------------------
                    AND RF.COD_INS                    = EF.COD_INS
@@ -901,6 +978,11 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                    AND A.DATA_CALCULO <=PAR_DAT_CONTAGEM
                    AND A.DATA_CALCULO >= EF.DAT_INI_EFEITO
                    AND A.DATA_CALCULO <= NVL(EF.DAT_FIM_EFEITO, PAR_DAT_CONTAGEM)
+                   --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                   --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                   --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                    AND (A.DATA_CALCULO < '28/05/2020' OR A.DATA_CALCULO > '31/12/2021')
 
                  )
                group by COD_ENTIDADE,
@@ -943,7 +1025,7 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                    AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                    AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                    AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
-                   --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                   --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                    AND RF.COD_VINCULO                not in  ('22', '5', '6')
                   ------------------------------------------------------
                    AND T.COD_INS                    =  RF.COD_INS
@@ -952,6 +1034,12 @@ PROCEDURE SP_CALC_ANOS_TRAB_ATIVO
                    AND AA.DATA_CALCULO <=PAR_DAT_CONTAGEM
                    AND AA.DATA_CALCULO >= T.DAT_ADM_ORIG
                    AND AA.DATA_CALCULO <= PAR_DAT_CONTAGEM
+                   
+                   --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                   --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                   --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                    AND (AA.DATA_CALCULO < '28/05/2020' OR AA.DATA_CALCULO > '31/12/2021')
                )
                group by COD_ENTIDADE,
                   COD_IDE_CLI,
@@ -997,8 +1085,17 @@ FROM (
      AND EF.FLG_STATUS = 'V'
      AND A.DATA_CALCULO <= PAR_DAT_CONTAGEM
      AND A.DATA_CALCULO >= EF.DAT_INI_EFEITO
-     AND A.DATA_CALCULO <= NVL(EF.DAT_FIM_EFEITO, PAR_DAT_CONTAGEM)
+     --Yumi em 06/11/2019: ajustado para fechar a vigência do cargo da evolução na
+     --data de fim de exercício.
+     --AND A.DATA_CALCULO <= NVL(EF.DAT_FIM_EFEITO, PAR_DAT_CONTAGEM)
+     AND A.DATA_CALCULO <= NVL(EF.DAT_FIM_EFEITO,  NVL(RF.DAT_FIM_EXERC,PAR_DAT_CONTAGEM) )
      AND A.DATA_CALCULO >= NVL(PAR_INICIO_PERIODO_LP, A.DATA_CALCULO)
+     
+     --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+     --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+     --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+    AND (A.DATA_CALCULO < '28/05/2020' OR A.DATA_CALCULO > '31/12/2021')
   union
     SELECT distinct AA.DATA_CALCULO,
                     1 AS COD_INS,
@@ -1027,47 +1124,102 @@ FROM (
         AND AA.DATA_CALCULO >= T.DAT_INI_LIC_PREM
         AND AA.DATA_CALCULO <=  NVL(T.DAT_FIM_LIC_PREM, PAR_DAT_CONTAGEM)
         AND AA.DATA_CALCULO >= NVL(PAR_INICIO_PERIODO_LP, AA.DATA_CALCULO)
+        --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+     --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+     --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+    AND (AA.DATA_CALCULO < '28/05/2020' OR AA.DATA_CALCULO > '31/12/2021')
+        
         AND NOT EXISTS (SELECT 1
                           FROM TB_RELACAO_FUNCIONAL  RF,
                                TB_EVOLUCAO_FUNCIONAL EF,
                                TB_DIAS_APOIO         A
                          WHERE RF.COD_INS = 1
                            AND RF.COD_IDE_CLI = PAR_COD_IDE_CLI
-                           AND RF.COD_ENTIDADE = PAR_COD_ENTIDADE
-                           AND RF.NUM_MATRICULA = PAR_NUM_MATRICULA
-                           AND RF.COD_IDE_REL_FUNC = PAR_COD_IDE_REL_FUNC
+                            --Yumi em 06/11/2019: comentado para remover concomitância
+                            ---com qualquer vínculo que exista na relacao funcional
+                           --AND RF.COD_ENTIDADE = PAR_COD_ENTIDADE
+                           --AND RF.NUM_MATRICULA = PAR_NUM_MATRICULA
+                           --AND RF.COD_IDE_REL_FUNC = PAR_COD_IDE_REL_FUNC
                            AND RF.COD_INS = EF.COD_INS
                            AND RF.NUM_MATRICULA = EF.NUM_MATRICULA
                            AND RF.COD_IDE_REL_FUNC = EF.COD_IDE_REL_FUNC
                            AND RF.COD_IDE_CLI = EF.COD_IDE_CLI
                            AND RF.COD_ENTIDADE = EF.COD_ENTIDADE
+                            --Yumi em 06/11/2019: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
+                           AND RF.COD_VINCULO not in ('22', '5', '6')
                            AND A.DATA_CALCULO <= PAR_DAT_CONTAGEM
+                           AND A.DATA_CALCULO >= NVL(PAR_INICIO_PERIODO_LP, A.DATA_CALCULO)
                            AND A.DATA_CALCULO >= EF.DAT_INI_EFEITO
-                           AND A.DATA_CALCULO <= NVL(EF.DAT_FIM_EFEITO, PAR_DAT_CONTAGEM)
+                            ---Yumi em 06/11/2019: ajustado pois nao estava pegando tempos averbados
+                            --entre períodos de vínculos)
+                           --AND A.DATA_CALCULO <= NVL(EF.DAT_FIM_EFEITO, PAR_DAT_CONTAGEM)
+                           AND A.DATA_CALCULO <= NVL(RF.DAT_FIM_EXERC, PAR_DAT_CONTAGEM)
                            AND AA.DATA_CALCULO = A.DATA_CALCULO
-                           AND A.DATA_CALCULO >= NVL(PAR_INICIO_PERIODO_LP, A.DATA_CALCULO))
+                            --Yumi em 06/11/2019:  incluído o status da evolucao para pegar somente vigente.)
+                            AND EF.FLG_STATUS = 'V'
+                            --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                            --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                            --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                            AND (A.DATA_CALCULO < '28/05/2020' OR A.DATA_CALCULO > '31/12/2021')
+                           )
+
+
    union all
       SELECT distinct AA.DATA_CALCULO,
                       1 AS COD_INS,
-                      AF.COD_ENTIDADE,
-                      AF.COD_IDE_CLI,
-                      AF.NUM_MATRICULA,
-                      AF.COD_IDE_REL_FUNC,
+                      AFA.COD_ENTIDADE,
+                      AFA.COD_IDE_CLI,
+                      AFA.NUM_MATRICULA,
+                      AFA.COD_IDE_REL_FUNC,
                       null as COD_CARGO,
                       'AFAST' AS TIPO_CONTAGEM,
                       mo.cod_agrup_afast as COD_AGRUP_AFAST
-        from tb_afastamento af join tb_motivo_afastamento mo
-                                 on mo.cod_mot_afast = af.cod_mot_afast
+        from
+        (
+             select
+             af.cod_ins,
+             af.cod_entidade,
+             af.cod_ide_cli,
+             af.num_matricula,
+             af.cod_ide_rel_func,
+             af.cod_mot_afast,
+             af.dat_ini_afast,
+             af.dat_ret_prev
+
+       from  tb_afastamento af ,
+             tb_relacao_funcional rf
+             where rf.cod_ins = PAR_COD_INS
+              and rf.cod_ide_cli = PAR_COD_IDE_CLI
+             ---Yumi em 06/11/2019: comentado para verificar licença
+             --de qualquer vínculo da relacao funcional
+              --and rf.cod_entidade = PAR_COD_ENTIDADE
+            ---and rf.num_matricula = PAR_NUM_MATRICULA
+             --and rf.cod_ide_rel_func = PAR_COD_IDE_REL_FUNC
+             and rf.cod_ide_cli = af.cod_ide_cli
+             and rf.cod_entidade = af.cod_entidade
+             and rf.num_matricula = af.num_matricula
+             and rf.cod_ide_rel_func = af.cod_ide_rel_func
+             and rf.cod_vinculo not in ('22', '5', '6')
+             )afa
+
+                                 join tb_motivo_afastamento mo
+                                 on mo.cod_mot_afast = afa.cod_mot_afast
                                join tb_dias_apoio AA
                                  on  AA.DATA_CALCULO < PAR_DAT_CONTAGEM
                                  AND AA.DATA_CALCULO >= NVL(PAR_INICIO_PERIODO_LP, AA.DATA_CALCULO)
-                                and AA.DATA_CALCULO between af.dat_ini_afast and  af.dat_ret_prev
-        where af.cod_ins = 1
-          and af.cod_ide_cli = PAR_COD_IDE_CLI
-          and af.cod_entidade = PAR_COD_ENTIDADE
-          and af.num_matricula = PAR_NUM_MATRICULA
-          and af.cod_ide_rel_func = PAR_COD_IDE_REL_FUNC
-          and MO.AUMENTA_CONT_LICENCA = 'S');
+                                and AA.DATA_CALCULO between afa.dat_ini_afast and  afa.dat_ret_prev
+        where MO.AUMENTA_CONT_LICENCA = 'S'
+        
+        --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+        --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+        --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+        AND (AA.DATA_CALCULO < '28/05/2020' OR AA.DATA_CALCULO > '31/12/2021')
+        )
+        
+        ;
 
 
 
@@ -1129,6 +1281,12 @@ FROM (
                              AND MO.COD_MOT_AFAST = T.COD_MOT_AFAST
                              AND MO.AUMENTA_CONT_ATS = 'S'
                              AND MO.COD_AGRUP_AFAST = 2
+                             
+                             --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                             --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                             --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                             AND (AA.DATA_CALCULO < '28/05/2020' OR AA.DATA_CALCULO > '31/12/2021')
 
 
 
@@ -1170,6 +1328,12 @@ FROM (
                              AND MO.COD_MOT_AFAST = T.COD_MOT_AFAST
                              AND MO.AUMENTA_CONT_ATS = 'S'
                              AND MO.COD_AGRUP_AFAST = 1
+                             
+                             --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                             --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                             --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                             AND (AA.DATA_CALCULO < '28/05/2020' OR AA.DATA_CALCULO > '31/12/2021')
 
 
 
@@ -1212,6 +1376,11 @@ FROM (
                              AND MO.AUMENTA_CONT_ATS             = 'S'
                              AND MO.COD_AGRUP_AFAST              = 3
 
+                             --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                             --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                             --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                             AND (AA.DATA_CALCULO < '28/05/2020' OR AA.DATA_CALCULO > '31/12/2021')
 
 
                   UNION ALL
@@ -1252,6 +1421,12 @@ FROM (
                              AND MO.COD_MOT_AFAST = T.COD_MOT_AFAST
                              AND MO.AUMENTA_CONT_ATS = 'S'
                              AND MO.COD_AGRUP_AFAST = 4
+                             
+                             --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                             --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                             --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                             AND (AA.DATA_CALCULO < '28/05/2020' OR AA.DATA_CALCULO > '31/12/2021')
 
 
 
@@ -1293,6 +1468,12 @@ FROM (
                              AND MO.COD_MOT_AFAST = T.COD_MOT_AFAST
                              AND MO.AUMENTA_CONT_ATS = 'S'
                              AND MO.COD_AGRUP_AFAST = 5
+                             
+                             --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                             --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                             --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                             AND (AA.DATA_CALCULO < '28/05/2020' OR AA.DATA_CALCULO > '31/12/2021')
 
 
                   UNION ALL
@@ -1334,6 +1515,12 @@ FROM (
                              AND AA.DATA_CALCULO <= NVL(T.DAT_RET_PREV, SYSDATE)
                              AND MO.COD_MOT_AFAST = T.COD_MOT_AFAST
                              AND MO.AUMENTA_CONT_ATS = 'S'
+                             
+                             --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                             --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                             --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                             AND (AA.DATA_CALCULO < '28/05/2020' OR AA.DATA_CALCULO > '31/12/2021')
 
                              AND NOT EXISTS
                            (SELECT 1
@@ -1365,6 +1552,11 @@ FROM (
                                      AND MO.AUMENTA_CONT_ATS = 'S'
                                      AND NVL(MO.COD_AGRUP_AFAST, 0) IN (1, 2, 3, 4, 5)
                                      AND AA.DATA_CALCULO = A.DATA_CALCULO
+                                     --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                                     --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                                     --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                                     AND (A.DATA_CALCULO < '28/05/2020' OR A.DATA_CALCULO > '31/12/2021')
 
                                   )
                  )
@@ -1446,6 +1638,12 @@ FROM (
                              AND MO.COD_MOT_AFAST = T.COD_MOT_AFAST
                              AND MO.AUMENTA_CONT_LICENCA = 'S'
                              AND MO.COD_AGRUP_AFAST = 2
+                             
+                             --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                             --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                             --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                             AND (AA.DATA_CALCULO < '28/05/2020' OR AA.DATA_CALCULO > '31/12/2021')
 
 
 
@@ -1488,7 +1686,12 @@ FROM (
                              AND MO.COD_MOT_AFAST = T.COD_MOT_AFAST
                              AND MO.AUMENTA_CONT_LICENCA = 'S'
                              AND MO.COD_AGRUP_AFAST = 1
-
+                             
+                             --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                             --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                             --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                             AND (AA.DATA_CALCULO < '28/05/2020' OR AA.DATA_CALCULO > '31/12/2021')
 
 
                   UNION ALL
@@ -1531,7 +1734,11 @@ FROM (
                              AND MO.AUMENTA_CONT_LICENCA         = 'S'
                              AND MO.COD_AGRUP_AFAST              = 3
 
-
+                             --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                             --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                             --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                             AND (AA.DATA_CALCULO < '28/05/2020' OR AA.DATA_CALCULO > '31/12/2021')
 
                   UNION ALL
                    -- 'FALTAS -FI' as Tipo,
@@ -1573,7 +1780,11 @@ FROM (
                              AND MO.AUMENTA_CONT_LICENCA        = 'S'
                              AND MO.COD_AGRUP_AFAST = 4
 
-
+                             --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                             --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                             --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                             AND (AA.DATA_CALCULO < '28/05/2020' OR AA.DATA_CALCULO > '31/12/2021')
 
                   UNION ALL
                    -- 'SUSP' as Tipo,
@@ -1614,7 +1825,12 @@ FROM (
                              AND MO.COD_MOT_AFAST = T.COD_MOT_AFAST
                              AND MO.AUMENTA_CONT_LICENCA      = 'S'
                              AND MO.COD_AGRUP_AFAST           = 5
-
+                             
+                             --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                             --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                             --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                             AND (AA.DATA_CALCULO < '28/05/2020' OR AA.DATA_CALCULO > '31/12/2021')
 
                   UNION ALL
 
@@ -1656,6 +1872,12 @@ FROM (
                              AND AA.DATA_CALCULO >= NVL(PAR_INICIO_PERIODO_LP, AA.DATA_CALCULO)
                              AND MO.COD_MOT_AFAST = T.COD_MOT_AFAST
                              AND MO.AUMENTA_CONT_LICENCA      = 'S'
+                             
+                             --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                             --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                             --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                             AND (AA.DATA_CALCULO < '28/05/2020' OR AA.DATA_CALCULO > '31/12/2021')
 
                              AND NOT EXISTS
                            (SELECT 1
@@ -1688,6 +1910,11 @@ FROM (
                                      AND MO.AUMENTA_CONT_LICENCA      = 'S'
                                      AND NVL(MO.COD_AGRUP_AFAST, 0) IN (1, 2, 3, 4, 5)
                                      AND AA.DATA_CALCULO = A.DATA_CALCULO
+                                     --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                                     --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                                     --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                                     AND (A.DATA_CALCULO < '28/05/2020' OR A.DATA_CALCULO > '31/12/2021')
 
                                   )
                  )
@@ -1843,6 +2070,12 @@ FROM (
                    AND AA.DATA_CALCULO >= T.DAT_ADM_ORIG
                    AND AA.DATA_CALCULO <= NVL(T.DAT_DESL_ORIG, SYSDATE)
                    AND AA.DATA_CALCULO >= NVL(PAR_INICIO_PERIODO_LP, AA.DATA_CALCULO)
+                   
+                   --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                   --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                   --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                   AND (AA.DATA_CALCULO < '28/05/2020' OR AA.DATA_CALCULO > '31/12/2021')
 
                    AND NOT EXISTS
                  (
@@ -1854,8 +2087,8 @@ FROM (
                          WHERE
                                 RF.COD_INS                    = 1
                            AND RF.COD_IDE_CLI                = PAR_COD_IDE_CLI
-                           --Yumi em 01/05/2018: comentado para remover concomitancia
-                           ---com qualquer vinculo que exista na relacao funcional
+                           --Yumi em 01/05/2018: comentado para remover concomitância
+                           ---com qualquer vínculo que exista na relacao funcional
                            ---AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                            --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                            ---AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
@@ -1864,16 +2097,21 @@ FROM (
                            AND RF.COD_IDE_REL_FUNC           = EF.COD_IDE_REL_FUNC
                            AND RF.COD_IDE_CLI                = EF.COD_IDE_CLI
                            AND RF.COD_ENTIDADE               = EF.COD_ENTIDADE
-                           --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                           --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                            AND RF.COD_VINCULO                not in  ('22', '5', '6')
                            AND EF.FLG_STATUS                = 'V'
                            AND A.DATA_CALCULO <=PAR_DAT_CONTAGEM
                            AND A.DATA_CALCULO >= EF.DAT_INI_EFEITO
                            ---Yumi em 02/05/201*: ajustado pois nao estava pegando tempos averrbados
-                           --entre periodos de vinculos
+                           --entre períodos de vínculos
                            --AND A.DATA_CALCULO <= NVL(EF.DAT_FIM_EFEITO, SYSDATE)
                            AND A.DATA_CALCULO <= NVL(RF.DAT_FIM_EXERC, PAR_DAT_CONTAGEM)
                            AND AA.DATA_CALCULO = A.DATA_CALCULO
+                           --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                           --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                           --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                           AND (A.DATA_CALCULO < '28/05/2020' OR A.DATA_CALCULO > '31/12/2021')
 
                         )
 
@@ -1904,17 +2142,17 @@ SELECT  ANO,
                          TO_CHAR(AA.DATA_CALCULO, 'YYYY') ANO,
                          CASE
                            WHEN AA.DATA_CALCULO = T.DAT_ADM_ORIG THEN
-                            'Certidao n? ' || T.NUM_CERTIDAO || ', emissor ' ||
+                            'Certidao nº ' || T.NUM_CERTIDAO || ', emissor ' ||
                             (SELECT CO.DES_DESCRICAO
                                FROM TB_CODIGO CO
                               WHERE CO.COD_INS = 0
                                 AND CO.COD_NUM = 2378
                                 AND CO.COD_PAR = T.COD_EMISSOR) ||
                             ', empresa/orgao: ' || T.NOM_ORG_EMP ||
-                            ', inicio em ' ||
+                            ', início em ' ||
                             TO_CHAR(T.DAT_ADM_ORIG, 'DD/MM/RRRR')
                            WHEN AA.DATA_CALCULO = T.DAT_DESL_ORIG THEN
-                            'Certidao n? ' || T.NUM_CERTIDAO || ', emissor ' ||
+                            'Certidao nº ' || T.NUM_CERTIDAO || ', emissor ' ||
                             (SELECT CO.DES_DESCRICAO
                                FROM TB_CODIGO CO
                               WHERE CO.COD_INS = 0
@@ -1942,6 +2180,12 @@ SELECT  ANO,
        AND AA.DATA_CALCULO<=PAR_DAT_CONTAGEM
        AND (AA.DATA_CALCULO = T.DAT_ADM_ORIG OR
           AA.DATA_CALCULO = NVL(T.DAT_DESL_ORIG, SYSDATE))
+          
+      --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+     --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+     --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+    AND (AA.DATA_CALCULO < '28/05/2020' OR AA.DATA_CALCULO > '31/12/2021')
        AND NOT EXISTS (
 
            /*SELECT 1
@@ -1973,8 +2217,8 @@ SELECT  ANO,
                          WHERE
                                 RF.COD_INS                    = 1
                            AND RF.COD_IDE_CLI                = PAR_COD_IDE_CLI
-                           --Yumi em 01/05/2018: comentado para remover concomitancia
-                           ---com qualquer vinculo que exista na relacao funcional
+                           --Yumi em 01/05/2018: comentado para remover concomitância
+                           ---com qualquer vínculo que exista na relacao funcional
                            ---AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                            --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                            ---AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
@@ -1983,22 +2227,28 @@ SELECT  ANO,
                            AND RF.COD_IDE_REL_FUNC           = EF.COD_IDE_REL_FUNC
                            AND RF.COD_IDE_CLI                = EF.COD_IDE_CLI
                            AND RF.COD_ENTIDADE               = EF.COD_ENTIDADE
-                           --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                           --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                            AND RF.COD_VINCULO                not in  ('22', '5', '6')
                            AND EF.FLG_STATUS                = 'V'
                            AND A.DATA_CALCULO <=PAR_DAT_CONTAGEM
                            AND A.DATA_CALCULO >= EF.DAT_INI_EFEITO
                            ---Yumi em 02/05/201*: ajustado pois nao estava pegando tempos averrbados
-                           --entre periodos de vinculos
+                           --entre períodos de vínculos
                            --AND A.DATA_CALCULO <= NVL(EF.DAT_FIM_EFEITO, SYSDATE)
                            AND A.DATA_CALCULO <= NVL(RF.DAT_FIM_EXERC, PAR_DAT_CONTAGEM)
                            AND AA.DATA_CALCULO = A.DATA_CALCULO
+                           
+                           --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+                           --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+                           --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+                           AND (A.DATA_CALCULO < '28/05/2020' OR A.DATA_CALCULO > '31/12/2021')
 
            )
 
          UNION ALL
          --------------------------------------------------
-          -- Detalhe de Relacao Funcional
+          -- Detalhe de Relaçao Funcional
          --------------------------------------------------
          SELECT distinct A.DATA_CALCULO,
                          TO_CHAR(A.DATA_CALCULO, 'YYYY'),
@@ -2031,7 +2281,7 @@ SELECT  ANO,
          --------------------------------------------------------
          RF.COD_INS              = PAR_COD_INS
          AND RF.COD_IDE_CLI      = PAR_COD_IDE_CLI
-         --Yumi em 01/05/2018: comentado para pegar todos os vinculos
+         --Yumi em 01/05/2018: comentado para pegar todos os vínculos
           --da relacao funcional
          --AND RF.COD_ENTIDADE     = PAR_COD_ENTIDADE
          --AND RF.NUM_MATRICULA    = PAR_NUM_MATRICULA
@@ -2047,6 +2297,12 @@ SELECT  ANO,
        AND A.DATA_CALCULO  <=PAR_DAT_CONTAGEM
        AND (A.DATA_CALCULO = EF.DAT_INI_EFEITO
           --OR  A.DATA_CALCULO = NVL(EF.DAT_FIM_EFEITO, SYSDATE)
+          
+        --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+        --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+        --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+         AND (A.DATA_CALCULO < '28/05/2020' OR A.DATA_CALCULO > '31/12/2021')
           )
 
          --------------------------------------------------
@@ -2082,7 +2338,7 @@ SELECT  ANO,
          --------------------------------------------------------
              RF.COD_INS          = PAR_COD_INS
          AND RF.COD_IDE_CLI      = PAR_COD_IDE_CLI
-         --Yumi em 01/05/2018: comentado para pegar todos os vinculos
+         --Yumi em 01/05/2018: comentado para pegar todos os vínculos
           --da relacao funcional
          --AND RF.COD_ENTIDADE     = PAR_COD_ENTIDADE
          --AND RF.NUM_MATRICULA    =  PAR_NUM_MATRICULA
@@ -2096,13 +2352,19 @@ SELECT  ANO,
        AND RF.COD_ENTIDADE       = EF.COD_ENTIDADE
        AND A.DATA_CALCULO        = EF.DAT_INI_EFEITO
        AND A.DATA_CALCULO        <=PAR_DAT_CONTAGEM
+       
+       --Yumi em 09/06/2020: SOLICITADO POR EMAIL - RONISE:
+     --DE ACORDO COM A LC 173/2020 (ENFRENTAMENTO COVID-19), Art 8º, parágrafo IX:
+     --não considerar o período abaixo para contagem de ATS, Sexta Parte e Licença Premio
+      
+    AND (A.DATA_CALCULO < '28/05/2020' OR A.DATA_CALCULO > '31/12/2021')
          )
 
  WHERE GLS_DETALHE IS NOT NULL
  GROUP BY ANO;
 
   --------- CURSORES DE CONTAGEM DE APOSENTADORIA E SEUS DETALHES  ----
-  ----------------    TEMPOS DE CONTRIBUICAO  ------------
+  ----------------    TEMPOS DE CONTRIBUIÇAO  ------------
 
 
    CURSOR CUR_APO_TOT IS
@@ -2161,9 +2423,9 @@ SELECT  ANO,
 
     FROM  (
 
-                 -------- Tempo de Contribuicao ---------------------
-                   ------------ Obtem de Dias de Contribuicao ----------
-                   ------- Tudo Historico so com Corte de Data de contagem
+                 -------- Tempo de Contribuiçao ---------------------
+                   ------------ Obtem de Dias de Contribuiçao ----------
+                   ------- Tudo Historico só com Corte de Data de contagem
                       SELECT DISTINCT
                               data_calculo            ,
                               RF.cod_entidade            ,
@@ -2226,7 +2488,7 @@ SELECT  ANO,
 
 
                    ------------ Obtem de Dias de cargo ----------
-                   ------- Tudo Historico associado a ultimo cargo com corte de Data de contagem
+                   ------- Tudo Historico associado a último cargo com corte de Data de contagem
 
                    UNION ALL
                       SELECT
@@ -2290,7 +2552,7 @@ SELECT  ANO,
                                  AND A.DATA_CALCULO <= NVL(EF.DAT_FIM_EFEITO, SYSDATE)
                                  AND EF.COD_CARGO     =PAR_COD_CARGO
                       ------------ Obtem de Dias de Carreira ----------
-                   ------- Tudo Historico associado a ultima carreira com corte de Data de contagem
+                   ------- Tudo Historico associado a última carreira com corte de Data de contagem
                      UNION ALL
                       SELECT
                               data_calculo            ,
@@ -2370,7 +2632,7 @@ SELECT  ANO,
                                   0 Dia_inclusao_CC           ,
                                   0 Dia_inclusao_CTSP         ,
                                   0 Dia_inclusao_CCA         ,
-                             ------  Calculo de Tempo de contribuicao
+                             ------  Calculo de Tempo de contribuiçao
                                   CASE
                                       WHEN    MO.FLG_DESC_APOSENTADORIA = 'S'  AND
                                               MO.COD_AGRUP_AFAST = 2  THEN 1
@@ -2424,7 +2686,7 @@ SELECT  ANO,
                                               MO.COD_AGRUP_AFAST = 5 THEN 1
                                       ELSE
                                             0 END SUSPE_CC  ,
-                       ---------------- tempo servico publico  -------------------------
+                       ---------------- tempo serviço público  -------------------------
                                CASE
                                       WHEN    MO.FLG_DESC_EFE_EX_SERV_PUB   = 'S'  AND
                                               MO.COD_AGRUP_AFAST = 2  THEN 1
@@ -2593,7 +2855,7 @@ SELECT  ANO,
                                       )
 
                --------------------------------------------------------------
-               ---------- OUTROS Afastamento de Tempo de Contribuicao  ------
+               ---------- OUTROS Afastamento de Tempo de Contribuiçao  ------
                UNION ALL
                SELECT
                             data_calculo            ,
@@ -3266,7 +3528,7 @@ SELECT par_id_contagem as id_contagem,
          ) QTD_LIQUIDO
           FROM (
 
-         -- Tabela de Contagem  Dias da Evolucacao Funcional
+         -- Tabela de Contagem  Dias da Evolucaçao Funcional
         ---- Dias Bruto -----
         SELECT 'BRUTO' as Tipo,
                COD_ENTIDADE,
@@ -3317,7 +3579,7 @@ SELECT par_id_contagem as id_contagem,
                    AND RF.COD_IDE_REL_FUNC           = EF.COD_IDE_REL_FUNC
                    AND RF.COD_IDE_CLI                = EF.COD_IDE_CLI
                    AND RF.COD_ENTIDADE               = EF.COD_ENTIDADE
-                   --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                   --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                    AND RF.COD_VINCULO                not in  ('22', '5', '6')
                    AND EF.FLG_STATUS                 ='V'
                    AND A.DATA_CALCULO <=PAR_DAT_CONTAGEM
@@ -3327,10 +3589,10 @@ SELECT par_id_contagem as id_contagem,
                    AND C.COD_ENTIDADE                = EF.COD_ENTIDADE
                    AND C.COD_CARGO                   = EF.COD_CARGO
 
-                   --Yumi em 02/05/2018: Precisa colocar a regra do vinculo que nao considera
+                   --Yumi em 02/05/2018: Precisa colocar a regra do vínculo que nao considera
                    --AND RF.COD_IDE_REL_FUNC NOT IN (94101, 213901 )
 
-                   --YUMI EM 01/05/2018: INCLUIDO PARA PEGAR VINCULOS ANTERIORES DA RELACAO FUNCIONAL
+                   --YUMI EM 01/05/2018: INCLUÍDO PARA PEGAR VÍNCULOS ANTERIORES DA RELACAO FUNCIONAL
                    union
 
                    SELECT distinct
@@ -3362,13 +3624,13 @@ SELECT par_id_contagem as id_contagem,
                    AND RF.COD_IDE_REL_FUNC           = EF.COD_IDE_REL_FUNC
                    AND RF.COD_IDE_CLI                = EF.COD_IDE_CLI
                    AND RF.COD_ENTIDADE               = EF.COD_ENTIDADE
-                   --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                   --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                    AND RF.COD_VINCULO                not in  ('22', '5', '6')
                    AND EF.FLG_STATUS                 ='V'
                    AND A.DATA_CALCULO <=PAR_DAT_CONTAGEM
                    AND A.DATA_CALCULO >= EF.DAT_INI_EFEITO
                    AND A.DATA_CALCULO <= NVL(EF.DAT_FIM_EFEITO, RF.DAT_FIM_EXERC)
-                   --Yumi em 02/05/2018: Precisa colocar a regra do vinculo que nao considera
+                   --Yumi em 02/05/2018: Precisa colocar a regra do vínculo que nao considera
                    --AND RF.COD_IDE_REL_FUNC NOT IN (94101, 213901 )
                    AND C.COD_INS                     = EF.COD_INS
                    AND C.COD_ENTIDADE                = EF.COD_ENTIDADE
@@ -3447,8 +3709,8 @@ SELECT par_id_contagem as id_contagem,
                          WHERE
                                 RF.COD_INS                    = 1
                            AND RF.COD_IDE_CLI                = PAR_COD_IDE_CLI
-                           --Yumi em 01/05/2018: comentado para remover concomitancia
-                           ---com qualquer vinculo que exista na relacao funcional
+                           --Yumi em 01/05/2018: comentado para remover concomitância
+                           ---com qualquer vínculo que exista na relacao funcional
                            ---AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                            --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                            ---AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
@@ -3457,16 +3719,16 @@ SELECT par_id_contagem as id_contagem,
                            AND RF.COD_IDE_REL_FUNC           = EF.COD_IDE_REL_FUNC
                            AND RF.COD_IDE_CLI                = EF.COD_IDE_CLI
                            AND RF.COD_ENTIDADE               = EF.COD_ENTIDADE
-                           --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                           --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                            AND RF.COD_VINCULO                not in  ('22', '5', '6')
                            AND A.DATA_CALCULO <=PAR_DAT_CONTAGEM
                            AND A.DATA_CALCULO >= EF.DAT_INI_EFEITO
                            ---Yumi em 02/05/201*: ajustado pois nao estava pegando tempos averrbados
-                           --entre periodos de vinculos
+                           --entre períodos de vínculos
                            --AND A.DATA_CALCULO <= NVL(EF.DAT_FIM_EFEITO, SYSDATE)
                            AND A.DATA_CALCULO <= NVL(RF.DAT_FIM_EXERC, PAR_DAT_CONTAGEM)
                            AND AA.DATA_CALCULO = A.DATA_CALCULO
-                        --Yumi em 23/07/2018: incluido o status da evolucao para pegar somente vigente.
+                        --Yumi em 23/07/2018: incluído o status da evolucao para pegar somente vigente.
                         AND EF.FLG_STATUS = 'V'
                         )
 
@@ -3523,8 +3785,8 @@ SELECT par_id_contagem as id_contagem,
                  WHERE
                        RF.COD_INS                    = PAR_COD_INS
                    AND RF.COD_IDE_CLI                = PAR_COD_IDE_CLI
-                   ---Yumi em 01/05/2018: comentado para verificar licenca
-                   --de qualquer vinculo da relacao funcional
+                   ---Yumi em 01/05/2018: comentado para verificar licença
+                   --de qualquer vínculo da relacao funcional
                    ---AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                    --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                    ---AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
@@ -3533,7 +3795,7 @@ SELECT par_id_contagem as id_contagem,
                    AND RF.COD_IDE_CLI             = T.COD_IDE_CLI
                    AND RF.NUM_MATRICULA           = T.NUM_MATRICULA
                    AND RF.COD_IDE_REL_FUNC        = T.COD_IDE_REL_FUNC
-                   --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                   --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                    AND RF.COD_VINCULO                not in  ('22', '5', '6')
                       ------------------------------------------
                    AND AA.DATA_CALCULO <=PAR_DAT_CONTAGEM
@@ -3606,8 +3868,8 @@ SELECT par_id_contagem as id_contagem,
                  WHERE
                        RF.COD_INS                    = PAR_COD_INS
                    AND RF.COD_IDE_CLI                = PAR_COD_IDE_CLI
-                   ---Yumi em 01/05/2018: comentado para verificar licenca
-                   --de qualquer vinculo da relacao funcional
+                   ---Yumi em 01/05/2018: comentado para verificar licença
+                   --de qualquer vínculo da relacao funcional
                    --AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                    --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                    --AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
@@ -3616,7 +3878,7 @@ SELECT par_id_contagem as id_contagem,
                    AND RF.COD_IDE_CLI             = T.COD_IDE_CLI
                    AND RF.NUM_MATRICULA           = T.NUM_MATRICULA
                    AND RF.COD_IDE_REL_FUNC        = T.COD_IDE_REL_FUNC
-                   --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                   --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                    AND RF.COD_VINCULO                not in  ('22', '5', '6')
                       ------------------------------------------
                    AND AA.DATA_CALCULO <=PAR_DAT_CONTAGEM
@@ -3691,8 +3953,8 @@ SELECT par_id_contagem as id_contagem,
                  WHERE
                        RF.COD_INS                    = PAR_COD_INS
                    AND RF.COD_IDE_CLI                = PAR_COD_IDE_CLI
-                   ---Yumi em 01/05/2018: comentado para verificar licenca
-                   --de qualquer vinculo da relacao funcional
+                   ---Yumi em 01/05/2018: comentado para verificar licença
+                   --de qualquer vínculo da relacao funcional
                    --AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                    --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                    --AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
@@ -3701,7 +3963,7 @@ SELECT par_id_contagem as id_contagem,
                    AND RF.COD_IDE_CLI                = T.COD_IDE_CLI
                    AND RF.NUM_MATRICULA              = T.NUM_MATRICULA
                    AND RF.COD_IDE_REL_FUNC           = T.COD_IDE_REL_FUNC
-                   --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                   --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                    AND RF.COD_VINCULO                not in  ('22', '5', '6')
                       ------------------------------------------
                    AND AA.DATA_CALCULO                <=PAR_DAT_CONTAGEM
@@ -3774,12 +4036,12 @@ SELECT par_id_contagem as id_contagem,
                  WHERE
                        RF.COD_INS                    = PAR_COD_INS
                    AND RF.COD_IDE_CLI                = PAR_COD_IDE_CLI
-                   ---Yumi em 01/05/2018: comentado para verificar licenca
-                   --de qualquer vinculo da relacao funcional
+                   ---Yumi em 01/05/2018: comentado para verificar licença
+                   --de qualquer vínculo da relacao funcional
                    --AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                    --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                    --AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
-                   --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                   --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                    AND RF.COD_VINCULO                not in  ('22', '5', '6')
                       ------------------------------------------
                    AND RF.COD_INS                 = T.COD_INS
@@ -3858,12 +4120,12 @@ SELECT par_id_contagem as id_contagem,
                   WHERE
                        RF.COD_INS                    = PAR_COD_INS
                    AND RF.COD_IDE_CLI                = PAR_COD_IDE_CLI
-                   ---Yumi em 01/05/2018: comentado para verificar licenca
-                   --de qualquer vinculo da relacao funcional
+                   ---Yumi em 01/05/2018: comentado para verificar licença
+                   --de qualquer vínculo da relacao funcional
                    --AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                    --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                    --AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
-                   --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                   --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                    AND RF.COD_VINCULO                not in  ('22', '5', '6')
                       ------------------------------------------
                    AND RF.COD_INS                 = T.COD_INS
@@ -3944,12 +4206,12 @@ SELECT par_id_contagem as id_contagem,
                  WHERE
                        RF.COD_INS                    = PAR_COD_INS
                    AND RF.COD_IDE_CLI                = PAR_COD_IDE_CLI
-                   ---Yumi em 01/05/2018: comentado para verificar licenca
-                   --de qualquer vinculo da relacao funcional
+                   ---Yumi em 01/05/2018: comentado para verificar licença
+                   --de qualquer vínculo da relacao funcional
                    --AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                    --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                    --AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
-                   --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                   --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                    AND RF.COD_VINCULO                not in  ('22', '5', '6')
                       ------------------------------------------
                    AND RF.COD_INS                 = T.COD_INS
@@ -3983,7 +4245,7 @@ SELECT par_id_contagem as id_contagem,
                                tb_dias_apoio         A,
                                tb_motivo_afastamento MO
                          WHERE RF.COD_INS               = PAR_COD_INS
-                         --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                         --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                           AND RF.COD_VINCULO                not in  ('22', '5', '6')
                            --AND RF.COD_ENTIDADE          = PAR_COD_ENTIDADE
                            --AND RF.NUM_MATRICULA         = PAR_NUM_MATRICULA
@@ -4020,8 +4282,8 @@ SELECT par_id_contagem as id_contagem,
                   DATA_FIM
 
          union
-         ---Yumi em 01/05/2018: incluido para descontar os dias de descontos
-         ---relacionados ao historico de tempos averbados
+         ---Yumi em 01/05/2018: incluído para descontar os dias de descontos
+         ---relacionados ao histórico de tempos averbados
          select
                'OUTRO' as Tipo,
                COD_ENTIDADE,
@@ -4064,7 +4326,7 @@ SELECT par_id_contagem as id_contagem,
                    AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                    AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                    AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
-                   --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                   --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                    AND RF.COD_VINCULO                not in  ('22', '5', '6')
                   ------------------------------------------------------
                    AND T1.COD_INS                    =  RF.COD_INS
@@ -4085,8 +4347,8 @@ SELECT par_id_contagem as id_contagem,
                          WHERE
                                 RF.COD_INS                    = 1
                            AND RF.COD_IDE_CLI                = PAR_COD_IDE_CLI
-                           --Yumi em 01/05/2018: comentado para remover concomitancia
-                           ---com qualquer vinculo que exista na relacao funcional
+                           --Yumi em 01/05/2018: comentado para remover concomitância
+                           ---com qualquer vínculo que exista na relacao funcional
                            ---AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                            --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                            ---AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
@@ -4095,7 +4357,7 @@ SELECT par_id_contagem as id_contagem,
                            AND RF.COD_IDE_REL_FUNC           = EF.COD_IDE_REL_FUNC
                            AND RF.COD_IDE_CLI                = EF.COD_IDE_CLI
                            AND RF.COD_ENTIDADE               = EF.COD_ENTIDADE
-                           --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                           --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                            AND RF.COD_VINCULO                not in  ('22', '5', '6')
                            AND A.DATA_CALCULO <=PAR_DAT_CONTAGEM
                            AND A.DATA_CALCULO >= EF.DAT_INI_EFEITO
@@ -4157,7 +4419,7 @@ SELECT par_id_contagem as id_contagem,
                    AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                    AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                    AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
-                   --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                   --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                    AND RF.COD_VINCULO                not in  ('22', '5', '6')
                ----------------------------------------------------------------
                    AND RF.COD_INS                    = EF.COD_INS
@@ -4222,7 +4484,7 @@ SELECT par_id_contagem as id_contagem,
                    AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                    AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                    AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
-                   --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                   --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                    AND RF.COD_VINCULO                not in  ('22', '5', '6')
                   ------------------------------------------------------
                    AND T.COD_INS                    =  RF.COD_INS
@@ -4288,7 +4550,7 @@ select rf.cod_ide_cli,
   where rf.cod_ins          = PAR_COD_INS
     --and rf.cod_regime       = '2' --RGPS
     --and rf.cod_plano        = '2' --RGPS
-    and rf.tip_provimento   = '1' --Livre Provimento (cargo em Comiss?o)
+    and rf.tip_provimento   = '2' --Livre Provimento (cargo em Comissão)
     --and rf.cod_vinculo      = '8' --Comissionado
     and ef.cod_ins          = rf.cod_ins
     and ef.cod_ide_cli      = rf.cod_ide_cli
@@ -4332,7 +4594,7 @@ select
   where rf.cod_ins          = 1
     --and rf.cod_regime       = '2' --RGPS
     --and rf.cod_plano        = '2' --RGPS
-    and rf.tip_provimento   = '1' --Livre Provimento (cargo em Comiss?o)
+    and rf.tip_provimento   = '2' --Livre Provimento (cargo em Comissão)
     --and rf.cod_vinculo      = '8' --Comissionado
     and ef.cod_ins          = rf.cod_ins
     and ef.cod_ide_cli      = rf.cod_ide_cli
@@ -4377,9 +4639,10 @@ CREATE OR REPLACE PACKAGE BODY "PAC_CALCULA_TEMPO_ATIVO" as
 --3 - Aposentadoria
 --4 - Ferias
 --5 - Progressao
---6 - Remuneracao de Contribuic?es
+--6 - Remuneracao de Contribuições
 --7 - Tempo para CTC
 --8 - Declaracao para INSS
+--9 - Sexta Parte
 
 CURSOR CURTEMP_LP IS
 with TAB AS(  SELECT   distinct   DATA_CALCULO,
@@ -4407,7 +4670,7 @@ SELECT COD_IDE_CLI,
        SUM(CARGO) QTD_CARGO,
        (SUM(nvl(BRUTO, 0)) + SUM(nvl(Inclusao, 0)) - SUM(nvl(LTS, 0)) - SUM(nvl(LSV, 0)) - SUM(nvl(FJ, 0)) - SUM(nvl(FI, 0)) - SUM(nvl(OUTRO, 0))) QTD_LIQUIDO
   FROM (
-        -- Tabela de Contagem  Dias da Evolucacao Funcional
+        -- Tabela de Contagem  Dias da Evolucaçao Funcional
         ---- Dias Bruto -----
         SELECT 'BRUTO' as Tipo,
                 COD_ENTIDADE,
@@ -4432,7 +4695,7 @@ SELECT COD_IDE_CLI,
                   COD_IDE_REL_FUNC,
                   to_char(DATA_CALCULO, 'yyyy')
       UNION ALL
-         -- Tabela de Contagem  Dias da Evolucacao Funcional
+         -- Tabela de Contagem  Dias da Evolucaçao Funcional
         ---- Dias CARGO -----
         SELECT 'CARGO' as Tipo,
                 COD_ENTIDADE,
@@ -4528,7 +4791,7 @@ SELECT COD_IDE_CLI,
                 0 CARGO
           from  TAB
          WHERE TIPO_CONTAGEM = 'AFAST'
-           AND COD_AGRUP_AFAST = 1
+           AND COD_AGRUP_AFAST in(1,9)
          group by COD_ENTIDADE,
                   COD_IDE_CLI,
                   NUM_MATRICULA,
@@ -4628,7 +4891,7 @@ SELECT COD_IDE_CLI,
                 0 CARGO
           FROM TAB
          WHERE TIPO_CONTAGEM = 'AFAST'
-           AND COD_AGRUP_AFAST NOT IN (1,2,3,4,5)
+           AND COD_AGRUP_AFAST NOT IN (1,2,3,4,5,9)
          group by COD_ENTIDADE,
                   COD_IDE_CLI,
                   NUM_MATRICULA,
@@ -4716,7 +4979,7 @@ SELECT COD_IDE_CLI,
     PAR_DAT_CONTAGEM     := NVL(I_DAT_CONTAGEM, SYSDATE);
     ------------------------------------------------
 
-    --- Obtem Contador proximo Certidao ----
+    --- Obtem Contador próximo Certidao ----
     SELECT SEQ_CONTAGEM_ATIVO.NEXTVAL INTO SEQ_CERTIDAO FROM DUAL;
 
     ----- Verifica Tipo de processamento  ----
@@ -4749,11 +5012,11 @@ SELECT COD_IDE_CLI,
 
     COMMIT;
 
-    IF PAR_TIPO_CONTAGEM in (1, 2) THEN
+    IF PAR_TIPO_CONTAGEM in (1,9, 2,9) THEN
       SP_CONTAGEM_PERIODO_AGRUP(SEQ_CERTIDAO);
     END IF;
 
-    -- Gera periodo aquisitivo para licenca premio
+    -- Gera período aquisitivo para licença prêmio
     IF PAR_TIPO_CONTAGEM in (2) THEN
       SP_CONTAGEM_PERIODO_AQUIS_LP(SEQ_CERTIDAO);
     END IF;
@@ -4783,7 +5046,7 @@ SELECT COD_IDE_CLI,
   PROCEDURE GERA_DETALHE_POR_TIPO(SEQ_CERTIDAO IN NUMBER) IS
   BEGIN
     LEER_TEMPOS;
-    IF PAR_TIPO_CONTAGEM = 1 THEN
+    IF PAR_TIPO_CONTAGEM in( 1,9) THEN
 
       WHILE CURTEMP_ATS %FOUND LOOP
 
@@ -4876,7 +5139,7 @@ SELECT COD_IDE_CLI,
   BEGIN
 
     ----- Para Contagem de Aposentadoria Obtem
-    -- Carreira e Cargo da ultima evolucao Funcional..
+    -- Carreira e Cargo da última evoluçao Funcional..
 
     IF PAR_TIPO_CONTAGEM in (2,3) THEN
 
@@ -4988,14 +5251,14 @@ SELECT COD_IDE_CLI,
     END IF;
     --
     --
-    -- Gera colec?o de dias
+    -- Gera coleção de dias
     if PAR_TIPO_CONTAGEM = 2 then
-      -- Popula colec?o v_col_dias_lp com dados dos dias de licenca premio para utilziac?o em SP_CONTAGEM_PERIODO_AQUIS_LP
+      -- Popula coleção v_col_dias_lp com dados dos dias de licenca prêmio para utilziação em SP_CONTAGEM_PERIODO_AQUIS_LP
       open CURTEMP_LP_DIAS;
       fetch CURTEMP_LP_DIAS bulk collect into v_col_dias_lp;
       close CURTEMP_LP_DIAS;
 
-      -- Popula colec?o com cargos equivalentes
+      -- Popula coleção com cargos equivalentes
       select tc.cod_cargo
         bulk collect into v_col_cargos_equiv
         from tb_transf_cargo tc
@@ -5012,7 +5275,7 @@ SELECT COD_IDE_CLI,
   PROCEDURE ABRIR_CURSOR_CONTAGEM IS
   BEGIN
 
-    IF PAR_TIPO_CONTAGEM = 1 THEN
+    IF PAR_TIPO_CONTAGEM in (1,9) THEN
       ---- Cursor de ATS
       OPEN CURTEMP_ATS;
 
@@ -5047,7 +5310,7 @@ SELECT COD_IDE_CLI,
   PROCEDURE FECHAR_CURSOR_CONTAGEM IS
   BEGIN
 
-    IF PAR_TIPO_CONTAGEM = 1 THEN
+    IF PAR_TIPO_CONTAGEM in (1,9) THEN
       CLOSE CURTEMP_ATS;
     ELSE
       IF PAR_TIPO_CONTAGEM = 2 THEN
@@ -5073,7 +5336,7 @@ SELECT COD_IDE_CLI,
   PROCEDURE INCLUE_DETALHE_CONTAGEM(SEQ_CERTIDAO IN NUMBER) IS
   BEGIN
 
-    IF PAR_TIPO_CONTAGEM = 1 THEN
+    IF PAR_TIPO_CONTAGEM in (1,9) THEN
       INSERT INTO TB_CONTAGEM_SERV_ANO
         (cod_ins,
          id_contagem,
@@ -5212,7 +5475,7 @@ SELECT COD_IDE_CLI,
   PROCEDURE LEER_TEMPOS IS
   BEGIN
 
-    IF PAR_TIPO_CONTAGEM = 1 THEN
+    IF PAR_TIPO_CONTAGEM in (1,9) THEN
       FETCH CURTEMP_ATS
         INTO COD_IDE_CLI,
              NUM_MATRICULA,
@@ -5435,7 +5698,7 @@ SELECT COD_IDE_CLI,
                      tb_dias_apoio         A
                WHERE RF.COD_INS = PAR_COD_INS
                  AND RF.COD_IDE_CLI = PAR_COD_IDE_CLI
-                    --Yumi em 01/05/2018: comentado para pegar todos os vinculos
+                    --Yumi em 01/05/2018: comentado para pegar todos os vínculos
                     --da relacao funcional
                     --AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                     --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
@@ -5641,7 +5904,7 @@ SELECT COD_IDE_CLI,
              CS.NUM_DIAS_BRUTO  = QTD_DIAS_TRABALHADO,
              CS.DES_OBS = (CASE
                             WHEN QTD_DIAS_TRABALHADO < 365 THEN
-                             'Total de dias faltantes do periodo aquisitivo de ferias : ' ||
+                             'Total de dias faltantes do período aquisitivo de férias : ' ||
                              to_char(365 - QTD_DIAS_TRABALHADO)
 
                             ELSE
@@ -5676,7 +5939,7 @@ SELECT COD_IDE_CLI,
 
   PROCEDURE INCLUE_DETALHE_CONTAGEM_EMDIAS(SEQ_CERTIDAO IN NUMBER) IS
   BEGIN
-    IF PAR_TIPO_CONTAGEM = 1 THEN
+    IF PAR_TIPO_CONTAGEM in (1,9) THEN
       OPEN CURTEMP_ATS_FALTAS_DETALHE;
       FETCH CURTEMP_ATS_FALTAS_DETALHE
         INTO d_cod_entidade,
@@ -5887,7 +6150,7 @@ SELECT COD_IDE_CLI,
       END IF;
     END IF;
 
-    IF PAR_TIPO_CONTAGEM IN (1, 2) THEN
+    IF PAR_TIPO_CONTAGEM IN (1,9, 2) THEN
       OPEN CURTEMP_ATS_TEMPOS_DETALHE;
       FETCH CURTEMP_ATS_TEMPOS_DETALHE
         INTO d_dat_adm_orig,
@@ -6059,7 +6322,7 @@ SELECT COD_IDE_CLI,
 
                 ) LOOP
 
-      IF W_TIPO_REL = 1 THEN
+      IF W_TIPO_REL in (1,9) THEN
         SP_CALC_ANOS_TRAB_ATIVO(
 
                                 W_COD_INS, --I_COD_INS             IN  number ,
@@ -6135,7 +6398,7 @@ SELECT COD_IDE_CLI,
 
     begin
 
-    IF PAR_TIPO_CONTAGEM = 1 THEN
+    IF PAR_TIPO_CONTAGEM in (1,9) THEN
       FOR PER_ATS IN (SELECT PAR_ID_CONTAGEM as id_contagem,
                              COD_IDE_CLI,
                              NUM_MATRICULA,
@@ -6158,7 +6421,7 @@ SELECT COD_IDE_CLI,
                              SUM(nvl(OUTRO, 0))) QTD_LIQUIDO
                         FROM (
 
-                              -- Tabela de Contagem  Dias da Evolucacao Funcional
+                              -- Tabela de Contagem  Dias da Evolucaçao Funcional
                               ---- Dias Bruto -----
                               SELECT 'BRUTO' as Tipo,
                                       COD_ENTIDADE,
@@ -6180,7 +6443,7 @@ SELECT COD_IDE_CLI,
 
                                 from (SELECT distinct A.DATA_CALCULO,
                                                         1 AS COD_INS,
-                                                        1 AS TIPO_CONTAGEM,
+                                                        PAR_TIPO_CONTAGEM AS TIPO_CONTAGEM,
                                                         1 AS ID_CONTAGEM,
                                                         RF.COD_ENTIDADE,
                                                         RF.COD_IDE_CLI,
@@ -6211,7 +6474,7 @@ SELECT COD_IDE_CLI,
                                          EF.COD_IDE_REL_FUNC
                                       AND RF.COD_IDE_CLI = EF.COD_IDE_CLI
                                       AND RF.COD_ENTIDADE = EF.COD_ENTIDADE
-                                        --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                        --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                       AND RF.COD_VINCULO not in ('22', '5', '6')
                                       AND EF.FLG_STATUS = 'V'
                                       AND A.DATA_CALCULO <= PAR_DAT_CONTAGEM
@@ -6231,19 +6494,20 @@ SELECT COD_IDE_CLI,
                                                          EF.COD_PCCS
                                                      AND TC.COD_ENTIDADE =
                                                          EF.COD_ENTIDADE
+                                                     AND EF.DAT_INI_EFEITO >= '01/03/2018'    
                                              CONNECT BY PRIOR TC.COD_CARGO_TRANSF =
                                                          TC.COD_CARGO),
                                              EF.COD_CARGO) = C.COD_CARGO
 
-                                        --Yumi em 02/05/2018: Precisa colocar a regra do vinculo que nao considera
+                                        --Yumi em 02/05/2018: Precisa colocar a regra do vínculo que nao considera
                                         --AND RF.COD_IDE_REL_FUNC NOT IN (94101, 213901 )
 
-                                        --YUMI EM 01/05/2018: INCLUIDO PARA PEGAR VINCULOS ANTERIORES DA RELACAO FUNCIONAL
+                                        --YUMI EM 01/05/2018: INCLUÍDO PARA PEGAR VÍNCULOS ANTERIORES DA RELACAO FUNCIONAL
                                         union
 
                                         SELECT distinct A.DATA_CALCULO,
                                                         1 AS COD_INS,
-                                                        1 AS TIPO_CONTAGEM,
+                                                        PAR_TIPO_CONTAGEM AS TIPO_CONTAGEM,
                                                         1 AS ID_CONTAGEM,
                                                         RF.COD_ENTIDADE,
                                                         RF.COD_IDE_CLI,
@@ -6271,7 +6535,7 @@ SELECT COD_IDE_CLI,
                                          EF.COD_IDE_REL_FUNC
                                       AND RF.COD_IDE_CLI = EF.COD_IDE_CLI
                                       AND RF.COD_ENTIDADE = EF.COD_ENTIDADE
-                                        --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                        --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                       AND RF.COD_VINCULO not in ('22', '5', '6')
                                       AND EF.FLG_STATUS = 'V'
                                       AND A.DATA_CALCULO <= PAR_DAT_CONTAGEM
@@ -6279,7 +6543,7 @@ SELECT COD_IDE_CLI,
                                       AND A.DATA_CALCULO >= NVL(PAR_INICIO_PERIODO_LP, A.DATA_CALCULO)
                                       AND A.DATA_CALCULO <=
                                          NVL(EF.DAT_FIM_EFEITO, RF.DAT_FIM_EXERC)
-                                        --Yumi em 02/05/2018: Precisa colocar a regra do vinculo que nao considera
+                                        --Yumi em 02/05/2018: Precisa colocar a regra do vínculo que nao considera
                                         --AND RF.COD_IDE_REL_FUNC NOT IN (94101, 213901 )
                                       AND C.COD_INS = EF.COD_INS
                                       AND C.COD_ENTIDADE = EF.COD_ENTIDADE
@@ -6293,6 +6557,7 @@ SELECT COD_IDE_CLI,
                                                          EF.COD_PCCS
                                                      AND TC.COD_ENTIDADE =
                                                          EF.COD_ENTIDADE
+                                                     AND EF.DAT_INI_EFEITO >= '01/03/2018'    
                                              CONNECT BY PRIOR TC.COD_CARGO_TRANSF =
                                                          TC.COD_CARGO),
                                              EF.COD_CARGO) = C.COD_CARGO
@@ -6330,7 +6595,7 @@ SELECT COD_IDE_CLI,
 
                                 from (SELECT distinct AA.DATA_CALCULO,
                                                         1                   AS COD_INS,
-                                                        1                   AS TIPO_CONTAGEM,
+                                                        PAR_TIPO_CONTAGEM                   AS TIPO_CONTAGEM,
                                                         1                   AS ID_CONTAGEM,
                                                         RF.COD_ENTIDADE,
                                                         RF.COD_IDE_CLI,
@@ -6369,8 +6634,8 @@ SELECT COD_IDE_CLI,
                                                   tb_dias_apoio         A
                                            WHERE RF.COD_INS = 1
                                              AND RF.COD_IDE_CLI = PAR_COD_IDE_CLI
-                                                --Yumi em 01/05/2018: comentado para remover concomitancia
-                                                ---com qualquer vinculo que exista na relacao funcional
+                                                --Yumi em 01/05/2018: comentado para remover concomitância
+                                                ---com qualquer vínculo que exista na relacao funcional
                                                 ---AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                                                 --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                                                 ---AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
@@ -6381,7 +6646,7 @@ SELECT COD_IDE_CLI,
                                                  EF.COD_IDE_REL_FUNC
                                              AND RF.COD_IDE_CLI = EF.COD_IDE_CLI
                                              AND RF.COD_ENTIDADE = EF.COD_ENTIDADE
-                                                --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                                --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                              AND RF.COD_VINCULO not in
                                                  ('22', '5', '6')
                                              AND A.DATA_CALCULO <= PAR_DAT_CONTAGEM
@@ -6389,13 +6654,13 @@ SELECT COD_IDE_CLI,
                                              AND A.DATA_CALCULO >=
                                                  EF.DAT_INI_EFEITO
                                                 ---Yumi em 02/05/201*: ajustado pois nao estava pegando tempos averrbados
-                                                --entre periodos de vinculos
+                                                --entre períodos de vínculos
                                                 --AND A.DATA_CALCULO <= NVL(EF.DAT_FIM_EFEITO, SYSDATE)
                                              AND A.DATA_CALCULO <=
                                                  NVL(RF.DAT_FIM_EXERC,
                                                      PAR_DAT_CONTAGEM)
                                              AND AA.DATA_CALCULO = A.DATA_CALCULO
-                                                --Yumi em 23/07/2018: incluido o status da evolucao para pegar somente vigente.
+                                                --Yumi em 23/07/2018: incluído o status da evolucao para pegar somente vigente.
                                              AND EF.FLG_STATUS = 'V')
 
                                         )
@@ -6431,7 +6696,7 @@ SELECT COD_IDE_CLI,
                                       DATA_FIM
                                 from (SELECT distinct AA.DATA_CALCULO,
                                                        1 AS COD_INS,
-                                                       1 AS TIPO_CONTAGEM,
+                                                       PAR_TIPO_CONTAGEM AS TIPO_CONTAGEM,
                                                        1 AS ID_CONTAGEM,
                                                        RF.COD_ENTIDADE,
                                                        RF.COD_IDE_CLI,
@@ -6451,8 +6716,8 @@ SELECT COD_IDE_CLI,
                                               TB_CARGO              C
                                         WHERE RF.COD_INS = PAR_COD_INS
                                           AND RF.COD_IDE_CLI = PAR_COD_IDE_CLI
-                                             ---Yumi em 01/05/2018: comentado para verificar licenca
-                                             --de qualquer vinculo da relacao funcional
+                                             ---Yumi em 01/05/2018: comentado para verificar licença
+                                             --de qualquer vínculo da relacao funcional
                                              ---AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                                              --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                                              ---AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
@@ -6462,7 +6727,7 @@ SELECT COD_IDE_CLI,
                                           AND RF.NUM_MATRICULA = T.NUM_MATRICULA
                                           AND RF.COD_IDE_REL_FUNC =
                                               T.COD_IDE_REL_FUNC
-                                             --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                             --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                           AND RF.COD_VINCULO not in
                                               ('22', '5', '6')
                                              ------------------------------------------
@@ -6502,6 +6767,7 @@ SELECT COD_IDE_CLI,
                                                               EF.COD_PCCS
                                                           AND TC.COD_ENTIDADE =
                                                               EF.COD_ENTIDADE
+                                                          AND EF.DAT_INI_EFEITO >= '01/03/2018'    
                                                   CONNECT BY PRIOR TC.COD_CARGO_TRANSF =
                                                               TC.COD_CARGO),
                                                   EF.COD_CARGO) = C.COD_CARGO
@@ -6537,7 +6803,7 @@ SELECT COD_IDE_CLI,
                                       DATA_FIM
                                 from (SELECT distinct AA.DATA_CALCULO,
                                                        1 AS COD_INS,
-                                                       1 AS TIPO_CONTAGEM,
+                                                       PAR_TIPO_CONTAGEM AS TIPO_CONTAGEM,
                                                        1 AS ID_CONTAGEM,
                                                        RF.COD_ENTIDADE,
                                                        RF.COD_IDE_CLI,
@@ -6557,8 +6823,8 @@ SELECT COD_IDE_CLI,
                                               TB_CARGO              C
                                         WHERE RF.COD_INS = PAR_COD_INS
                                           AND RF.COD_IDE_CLI = PAR_COD_IDE_CLI
-                                             ---Yumi em 01/05/2018: comentado para verificar licenca
-                                             --de qualquer vinculo da relacao funcional
+                                             ---Yumi em 01/05/2018: comentado para verificar licença
+                                             --de qualquer vínculo da relacao funcional
                                              --AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                                              --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                                              --AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
@@ -6568,7 +6834,7 @@ SELECT COD_IDE_CLI,
                                           AND RF.NUM_MATRICULA = T.NUM_MATRICULA
                                           AND RF.COD_IDE_REL_FUNC =
                                               T.COD_IDE_REL_FUNC
-                                             --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                             --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                           AND RF.COD_VINCULO not in
                                               ('22', '5', '6')
                                              ------------------------------------------
@@ -6608,6 +6874,7 @@ SELECT COD_IDE_CLI,
                                                               EF.COD_PCCS
                                                           AND TC.COD_ENTIDADE =
                                                               EF.COD_ENTIDADE
+                                                          AND EF.DAT_INI_EFEITO >= '01/03/2018'    
                                                   CONNECT BY PRIOR TC.COD_CARGO_TRANSF =
                                                               TC.COD_CARGO),
                                                   EF.COD_CARGO) = C.COD_CARGO
@@ -6645,7 +6912,7 @@ SELECT COD_IDE_CLI,
                                       DATA_FIM
                                 from (SELECT distinct AA.DATA_CALCULO,
                                                        1 AS COD_INS,
-                                                       1 AS TIPO_CONTAGEM,
+                                                       PAR_TIPO_CONTAGEM AS TIPO_CONTAGEM,
                                                        1 AS ID_CONTAGEM,
                                                        RF.COD_ENTIDADE,
                                                        RF.COD_IDE_CLI,
@@ -6665,8 +6932,8 @@ SELECT COD_IDE_CLI,
                                               TB_CARGO              C
                                         WHERE RF.COD_INS = PAR_COD_INS
                                           AND RF.COD_IDE_CLI = PAR_COD_IDE_CLI
-                                             ---Yumi em 01/05/2018: comentado para verificar licenca
-                                             --de qualquer vinculo da relacao funcional
+                                             ---Yumi em 01/05/2018: comentado para verificar licença
+                                             --de qualquer vínculo da relacao funcional
                                              --AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                                              --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                                              --AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
@@ -6676,7 +6943,7 @@ SELECT COD_IDE_CLI,
                                           AND RF.NUM_MATRICULA = T.NUM_MATRICULA
                                           AND RF.COD_IDE_REL_FUNC =
                                               T.COD_IDE_REL_FUNC
-                                             --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                             --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                           AND RF.COD_VINCULO not in
                                               ('22', '5', '6')
                                              ------------------------------------------
@@ -6716,6 +6983,7 @@ SELECT COD_IDE_CLI,
                                                               EF.COD_PCCS
                                                           AND TC.COD_ENTIDADE =
                                                               EF.COD_ENTIDADE
+                                                          AND EF.DAT_INI_EFEITO >= '01/03/2018'    
                                                   CONNECT BY PRIOR TC.COD_CARGO_TRANSF =
                                                               TC.COD_CARGO),
                                                   EF.COD_CARGO) = C.COD_CARGO
@@ -6751,7 +7019,7 @@ SELECT COD_IDE_CLI,
                                       DATA_FIM
                                 from (SELECT distinct AA.DATA_CALCULO,
                                                        1 AS COD_INS,
-                                                       1 AS TIPO_CONTAGEM,
+                                                       PAR_TIPO_CONTAGEM AS TIPO_CONTAGEM,
                                                        1 AS ID_CONTAGEM,
                                                        RF.COD_ENTIDADE,
                                                        RF.COD_IDE_CLI,
@@ -6771,12 +7039,12 @@ SELECT COD_IDE_CLI,
 
                                         WHERE RF.COD_INS = PAR_COD_INS
                                           AND RF.COD_IDE_CLI = PAR_COD_IDE_CLI
-                                             ---Yumi em 01/05/2018: comentado para verificar licenca
-                                             --de qualquer vinculo da relacao funcional
+                                             ---Yumi em 01/05/2018: comentado para verificar licença
+                                             --de qualquer vínculo da relacao funcional
                                              --AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                                              --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                                              --AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
-                                             --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                             --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                           AND RF.COD_VINCULO not in
                                               ('22', '5', '6')
                                              ------------------------------------------
@@ -6822,6 +7090,7 @@ SELECT COD_IDE_CLI,
                                                               EF.COD_PCCS
                                                           AND TC.COD_ENTIDADE =
                                                               EF.COD_ENTIDADE
+                                                          AND EF.DAT_INI_EFEITO >= '01/03/2018'    
                                                   CONNECT BY PRIOR TC.COD_CARGO_TRANSF =
                                                               TC.COD_CARGO),
                                                   EF.COD_CARGO) = C.COD_CARGO
@@ -6859,7 +7128,7 @@ SELECT COD_IDE_CLI,
                                       DATA_FIM
                                 from (SELECT distinct AA.DATA_CALCULO,
                                                        1 AS COD_INS,
-                                                       1 AS TIPO_CONTAGEM,
+                                                       PAR_TIPO_CONTAGEM AS TIPO_CONTAGEM,
                                                        1 AS ID_CONTAGEM,
                                                        RF.COD_ENTIDADE,
                                                        RF.COD_IDE_CLI,
@@ -6878,12 +7147,12 @@ SELECT COD_IDE_CLI,
                                               TB_CARGO              C
                                         WHERE RF.COD_INS = PAR_COD_INS
                                           AND RF.COD_IDE_CLI = PAR_COD_IDE_CLI
-                                             ---Yumi em 01/05/2018: comentado para verificar licenca
-                                             --de qualquer vinculo da relacao funcional
+                                             ---Yumi em 01/05/2018: comentado para verificar licença
+                                             --de qualquer vínculo da relacao funcional
                                              --AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                                              --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                                              --AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
-                                             --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                             --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                           AND RF.COD_VINCULO not in
                                               ('22', '5', '6')
                                              ------------------------------------------
@@ -6929,6 +7198,7 @@ SELECT COD_IDE_CLI,
                                                               EF.COD_PCCS
                                                           AND TC.COD_ENTIDADE =
                                                               EF.COD_ENTIDADE
+                                                          AND EF.DAT_INI_EFEITO >= '01/03/2018'    
                                                   CONNECT BY PRIOR TC.COD_CARGO_TRANSF =
                                                               TC.COD_CARGO),
                                                   EF.COD_CARGO) = C.COD_CARGO
@@ -6965,7 +7235,7 @@ SELECT COD_IDE_CLI,
                                       DATA_FIM
                                 from (SELECT distinct AA.DATA_CALCULO,
                                                        1 AS COD_INS,
-                                                       1 AS TIPO_CONTAGEM,
+                                                       PAR_TIPO_CONTAGEM AS TIPO_CONTAGEM,
                                                        1 AS ID_CONTAGEM,
                                                        RF.COD_ENTIDADE,
                                                        RF.COD_IDE_CLI,
@@ -6986,12 +7256,12 @@ SELECT COD_IDE_CLI,
                                               TB_CARGO              C
                                         WHERE RF.COD_INS = PAR_COD_INS
                                           AND RF.COD_IDE_CLI = PAR_COD_IDE_CLI
-                                             ---Yumi em 01/05/2018: comentado para verificar licenca
-                                             --de qualquer vinculo da relacao funcional
+                                             ---Yumi em 01/05/2018: comentado para verificar licença
+                                             --de qualquer vínculo da relacao funcional
                                              --AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                                              --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                                              --AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
-                                             --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                             --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                           AND RF.COD_VINCULO not in
                                               ('22', '5', '6')
                                              ------------------------------------------
@@ -7036,6 +7306,7 @@ SELECT COD_IDE_CLI,
                                                               EF.COD_PCCS
                                                           AND TC.COD_ENTIDADE =
                                                               EF.COD_ENTIDADE
+                                                          AND EF.DAT_INI_EFEITO >= '01/03/2018'    
                                                   CONNECT BY PRIOR TC.COD_CARGO_TRANSF =
                                                               TC.COD_CARGO),
                                                   EF.COD_CARGO) = C.COD_CARGO
@@ -7047,7 +7318,7 @@ SELECT COD_IDE_CLI,
                                                       tb_dias_apoio         A,
                                                       tb_motivo_afastamento MO
                                                 WHERE RF.COD_INS = PAR_COD_INS
-                                                     --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                                     --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                                   AND RF.COD_VINCULO not in
                                                       ('22', '5', '6')
                                                      --AND RF.COD_ENTIDADE          = PAR_COD_ENTIDADE
@@ -7097,8 +7368,8 @@ SELECT COD_IDE_CLI,
                                          DATA_FIM
 
                               union
-                              ---Yumi em 01/05/2018: incluido para descontar os dias de descontos
-                              ---relacionados ao historico de tempos averbados
+                              ---Yumi em 01/05/2018: incluído para descontar os dias de descontos
+                              ---relacionados ao histórico de tempos averbados
                               select 'OUTRO' as Tipo,
                                       COD_ENTIDADE,
                                       COD_IDE_CLI,
@@ -7117,7 +7388,7 @@ SELECT COD_IDE_CLI,
                                       DATA_FIM
                                 from (SELECT distinct t1.dat_adm_orig,
                                                         1                    AS COD_INS,
-                                                        1                    AS TIPO_CONTAGEM,
+                                                        PAR_TIPO_CONTAGEM                    AS TIPO_CONTAGEM,
                                                         1                    AS ID_CONTAGEM,
                                                         RF.COD_ENTIDADE,
                                                         RF.COD_IDE_CLI,
@@ -7139,7 +7410,7 @@ SELECT COD_IDE_CLI,
                                       AND RF.NUM_MATRICULA = PAR_NUM_MATRICULA
                                       AND RF.COD_IDE_REL_FUNC =
                                          PAR_COD_IDE_REL_FUNC
-                                        --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                        --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                       AND RF.COD_VINCULO not in ('22', '5', '6')
                                         ------------------------------------------------------
                                       AND T1.COD_INS = RF.COD_INS
@@ -7160,8 +7431,8 @@ SELECT COD_IDE_CLI,
                                                   tb_dias_apoio         A
                                            WHERE RF.COD_INS = 1
                                              AND RF.COD_IDE_CLI = PAR_COD_IDE_CLI
-                                                --Yumi em 01/05/2018: comentado para remover concomitancia
-                                                ---com qualquer vinculo que exista na relacao funcional
+                                                --Yumi em 01/05/2018: comentado para remover concomitância
+                                                ---com qualquer vínculo que exista na relacao funcional
                                                 ---AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                                                 --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                                                 ---AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
@@ -7172,7 +7443,7 @@ SELECT COD_IDE_CLI,
                                                  EF.COD_IDE_REL_FUNC
                                              AND RF.COD_IDE_CLI = EF.COD_IDE_CLI
                                              AND RF.COD_ENTIDADE = EF.COD_ENTIDADE
-                                                --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                                --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                              AND RF.COD_VINCULO not in
                                                  ('22', '5', '6')
                                              AND A.DATA_CALCULO >= NVL(PAR_INICIO_PERIODO_LP, A.DATA_CALCULO)
@@ -7218,7 +7489,7 @@ SELECT COD_IDE_CLI,
 
                                        SELECT distinct A.DATA_CALCULO,
                                                         1 AS COD_INS,
-                                                        1 AS TIPO_CONTAGEM,
+                                                        PAR_TIPO_CONTAGEM AS TIPO_CONTAGEM,
                                                         1 AS ID_CONTAGEM,
                                                         RF.COD_ENTIDADE,
                                                         RF.COD_IDE_CLI,
@@ -7241,7 +7512,7 @@ SELECT COD_IDE_CLI,
                                               PAR_NUM_MATRICULA
                                           AND RF.COD_IDE_REL_FUNC =
                                               PAR_COD_IDE_REL_FUNC
-                                             --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                             --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                           AND RF.COD_VINCULO not in
                                               ('22', '5', '6')
                                              ----------------------------------------------------------------
@@ -7269,6 +7540,7 @@ SELECT COD_IDE_CLI,
                                                               EF.COD_PCCS
                                                           AND TC.COD_ENTIDADE =
                                                               EF.COD_ENTIDADE
+                                                          AND EF.DAT_INI_EFEITO >= '01/03/2018'    
                                                   CONNECT BY PRIOR TC.COD_CARGO_TRANSF =
                                                               TC.COD_CARGO),
                                                   EF.COD_CARGO) = C.COD_CARGO
@@ -7302,7 +7574,7 @@ SELECT COD_IDE_CLI,
 
                                 from (SELECT distinct AA.DATA_CALCULO,
                                                         1                   AS COD_INS,
-                                                        1                   AS TIPO_CONTAGEM,
+                                                        PAR_TIPO_CONTAGEM                   AS TIPO_CONTAGEM,
                                                         1                   AS ID_CONTAGEM,
                                                         RF.COD_ENTIDADE,
                                                         RF.COD_IDE_CLI,
@@ -7323,7 +7595,7 @@ SELECT COD_IDE_CLI,
                                       AND RF.NUM_MATRICULA = PAR_NUM_MATRICULA
                                       AND RF.COD_IDE_REL_FUNC =
                                          PAR_COD_IDE_REL_FUNC
-                                        --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                        --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                       AND RF.COD_VINCULO not in ('22', '5', '6')
                                         ------------------------------------------------------
                                       AND T.COD_INS = RF.COD_INS
@@ -7425,9 +7697,12 @@ SELECT COD_IDE_CLI,
                              COD_IDE_CLI,
                              NUM_MATRICULA,
                              COD_IDE_REL_FUNC,
-                             DATA_INICIO,
-                             DATA_FIM,
-                             NOM_CARGO,
+                             CASE WHEN PAR_INICIO_PERIODO_LP IS NULL THEN DATA_INICIO ELSE 
+                             PAR_INICIO_PERIODO_LP END DATA_INICIO,
+                             CASE WHEN PAR_INICIO_PERIODO_LP IS NULL THEN DATA_FIM ELSE
+                             PAR_DAT_CONTAGEM END DATA_FIM,
+                             (SELECT DISTINCT C.NOM_CARGO FROM TB_RELACAO_FUNCIONAL F INNER JOIN TB_CARGO C ON F.COD_CARGO = C.COD_CARGO WHERE AA.NUM_MATRICULA = F.NUM_MATRICULA
+                             AND AA.COD_IDE_REL_FUNC = F.COD_IDE_REL_FUNC)NOM_CARGO,
 
                              SUM(BRUTO) QTD_BRUTO,
                              SUM(Inclusao) QTD_INCLUSAO,
@@ -7443,7 +7718,7 @@ SELECT COD_IDE_CLI,
                              SUM(nvl(OUTRO, 0))) QTD_LIQUIDO
                         FROM (
 
-                              -- Tabela de Contagem  Dias da Evolucacao Funcional
+                              -- Tabela de Contagem  Dias da Evolucaçao Funcional
                               ---- Dias Bruto -----
                               SELECT 'BRUTO' as Tipo,
                                       COD_ENTIDADE,
@@ -7465,7 +7740,7 @@ SELECT COD_IDE_CLI,
 
                                 from (SELECT distinct A.DATA_CALCULO,
                                                         1 AS COD_INS,
-                                                        1 AS TIPO_CONTAGEM,
+                                                        PAR_TIPO_CONTAGEM AS TIPO_CONTAGEM,
                                                         1 AS ID_CONTAGEM,
                                                         RF.COD_ENTIDADE,
                                                         RF.COD_IDE_CLI,
@@ -7475,7 +7750,7 @@ SELECT COD_IDE_CLI,
                                                         NVL(PAR_INICIO_PERIODO_LP, ef.dat_ini_efeito) AS DATA_INICIO,
                                                         NVL(NVL(EF.DAT_FIM_EFEITO,
                                                                 RF.DAT_FIM_EXERC),
-                                                            PAR_DAT_CONTAGEM) AS DATA_FIM
+                                                            PAR_DAT_CONTAGEM) AS  DATA_FIM
 
                                           FROM TB_RELACAO_FUNCIONAL  RF,
                                                TB_EVOLUCAO_FUNCIONAL EF,
@@ -7496,7 +7771,7 @@ SELECT COD_IDE_CLI,
                                          EF.COD_IDE_REL_FUNC
                                       AND RF.COD_IDE_CLI = EF.COD_IDE_CLI
                                       AND RF.COD_ENTIDADE = EF.COD_ENTIDADE
-                                        --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                        --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                       AND RF.COD_VINCULO not in ('22', '5', '6')
                                       AND EF.FLG_STATUS = 'V'
                                       AND A.DATA_CALCULO <= PAR_DAT_CONTAGEM
@@ -7516,19 +7791,22 @@ SELECT COD_IDE_CLI,
                                                          EF.COD_PCCS
                                                      AND TC.COD_ENTIDADE =
                                                          EF.COD_ENTIDADE
+                                                     AND EF.DAT_FIM_EFEITO >= 
+                                                          C.DAT_FIM_VIG 
+                                                     AND EF.DAT_INI_EFEITO >= '01/03/2018'                                                              
                                              CONNECT BY PRIOR TC.COD_CARGO_TRANSF =
                                                          TC.COD_CARGO),
                                              EF.COD_CARGO) = C.COD_CARGO
 
-                                        --Yumi em 02/05/2018: Precisa colocar a regra do vinculo que nao considera
+                                        --Yumi em 02/05/2018: Precisa colocar a regra do vínculo que nao considera
                                         --AND RF.COD_IDE_REL_FUNC NOT IN (94101, 213901 )
 
-                                        --YUMI EM 01/05/2018: INCLUIDO PARA PEGAR VINCULOS ANTERIORES DA RELACAO FUNCIONAL
+                                        --YUMI EM 01/05/2018: INCLUÍDO PARA PEGAR VÍNCULOS ANTERIORES DA RELACAO FUNCIONAL
                                         union
 
                                         SELECT distinct A.DATA_CALCULO,
                                                         1 AS COD_INS,
-                                                        1 AS TIPO_CONTAGEM,
+                                                        PAR_TIPO_CONTAGEM AS TIPO_CONTAGEM,
                                                         1 AS ID_CONTAGEM,
                                                         RF.COD_ENTIDADE,
                                                         RF.COD_IDE_CLI,
@@ -7556,7 +7834,7 @@ SELECT COD_IDE_CLI,
                                          EF.COD_IDE_REL_FUNC
                                       AND RF.COD_IDE_CLI = EF.COD_IDE_CLI
                                       AND RF.COD_ENTIDADE = EF.COD_ENTIDADE
-                                        --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                        --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                       AND RF.COD_VINCULO not in ('22', '5', '6')
                                       AND EF.FLG_STATUS = 'V'
                                       AND A.DATA_CALCULO <= PAR_DAT_CONTAGEM
@@ -7564,7 +7842,7 @@ SELECT COD_IDE_CLI,
                                       AND A.DATA_CALCULO >= NVL(PAR_INICIO_PERIODO_LP, A.DATA_CALCULO)
                                       AND A.DATA_CALCULO <=
                                          NVL(EF.DAT_FIM_EFEITO, RF.DAT_FIM_EXERC)
-                                        --Yumi em 02/05/2018: Precisa colocar a regra do vinculo que nao considera
+                                        --Yumi em 02/05/2018: Precisa colocar a regra do vínculo que nao considera
                                         --AND RF.COD_IDE_REL_FUNC NOT IN (94101, 213901 )
                                       AND C.COD_INS = EF.COD_INS
                                       AND C.COD_ENTIDADE = EF.COD_ENTIDADE
@@ -7578,6 +7856,9 @@ SELECT COD_IDE_CLI,
                                                          EF.COD_PCCS
                                                      AND TC.COD_ENTIDADE =
                                                          EF.COD_ENTIDADE
+                                                     AND EF.DAT_FIM_EFEITO >= 
+                                                          C.DAT_FIM_VIG 
+                                                     AND EF.DAT_INI_EFEITO >= '01/03/2018'                                                              
                                              CONNECT BY PRIOR TC.COD_CARGO_TRANSF =
                                                          TC.COD_CARGO),
                                              EF.COD_CARGO) = C.COD_CARGO
@@ -7615,7 +7896,7 @@ SELECT COD_IDE_CLI,
 
                                 from (SELECT distinct AA.DATA_CALCULO,
                                                         1                   AS COD_INS,
-                                                        1                   AS TIPO_CONTAGEM,
+                                                        PAR_TIPO_CONTAGEM                   AS TIPO_CONTAGEM,
                                                         1                   AS ID_CONTAGEM,
                                                         RF.COD_ENTIDADE,
                                                         RF.COD_IDE_CLI,
@@ -7655,8 +7936,8 @@ SELECT COD_IDE_CLI,
                                                   tb_dias_apoio         A
                                            WHERE RF.COD_INS = 1
                                              AND RF.COD_IDE_CLI = PAR_COD_IDE_CLI
-                                                --Yumi em 01/05/2018: comentado para remover concomitancia
-                                                ---com qualquer vinculo que exista na relacao funcional
+                                                --Yumi em 01/05/2018: comentado para remover concomitância
+                                                ---com qualquer vínculo que exista na relacao funcional
                                                 ---AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                                                 --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                                                 ---AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
@@ -7667,7 +7948,7 @@ SELECT COD_IDE_CLI,
                                                  EF.COD_IDE_REL_FUNC
                                              AND RF.COD_IDE_CLI = EF.COD_IDE_CLI
                                              AND RF.COD_ENTIDADE = EF.COD_ENTIDADE
-                                                --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                                --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                              AND RF.COD_VINCULO not in
                                                  ('22', '5', '6')
                                              AND A.DATA_CALCULO <= PAR_DAT_CONTAGEM
@@ -7675,13 +7956,13 @@ SELECT COD_IDE_CLI,
                                              AND A.DATA_CALCULO >=
                                                  EF.DAT_INI_EFEITO
                                                 ---Yumi em 02/05/201*: ajustado pois nao estava pegando tempos averrbados
-                                                --entre periodos de vinculos
+                                                --entre períodos de vínculos
                                                 --AND A.DATA_CALCULO <= NVL(EF.DAT_FIM_EFEITO, SYSDATE)
                                              AND A.DATA_CALCULO <=
                                                  NVL(RF.DAT_FIM_EXERC,
                                                      PAR_DAT_CONTAGEM)
                                              AND AA.DATA_CALCULO = A.DATA_CALCULO
-                                                --Yumi em 23/07/2018: incluido o status da evolucao para pegar somente vigente.
+                                                --Yumi em 23/07/2018: incluído o status da evolucao para pegar somente vigente.
                                              AND EF.FLG_STATUS = 'V')
 
                                         )
@@ -7717,7 +7998,7 @@ SELECT COD_IDE_CLI,
                                       DATA_FIM
                                 from (SELECT distinct AA.DATA_CALCULO,
                                                        1 AS COD_INS,
-                                                       1 AS TIPO_CONTAGEM,
+                                                       PAR_TIPO_CONTAGEM AS TIPO_CONTAGEM,
                                                        1 AS ID_CONTAGEM,
                                                        RF.COD_ENTIDADE,
                                                        RF.COD_IDE_CLI,
@@ -7737,8 +8018,8 @@ SELECT COD_IDE_CLI,
                                               TB_CARGO              C
                                         WHERE RF.COD_INS = PAR_COD_INS
                                           AND RF.COD_IDE_CLI = PAR_COD_IDE_CLI
-                                             ---Yumi em 01/05/2018: comentado para verificar licenca
-                                             --de qualquer vinculo da relacao funcional
+                                             ---Yumi em 01/05/2018: comentado para verificar licença
+                                             --de qualquer vínculo da relacao funcional
                                              ---AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                                              --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                                              ---AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
@@ -7748,7 +8029,7 @@ SELECT COD_IDE_CLI,
                                           AND RF.NUM_MATRICULA = T.NUM_MATRICULA
                                           AND RF.COD_IDE_REL_FUNC =
                                               T.COD_IDE_REL_FUNC
-                                             --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                             --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                           AND RF.COD_VINCULO not in
                                               ('22', '5', '6')
                                              ------------------------------------------
@@ -7788,6 +8069,9 @@ SELECT COD_IDE_CLI,
                                                               EF.COD_PCCS
                                                           AND TC.COD_ENTIDADE =
                                                               EF.COD_ENTIDADE
+                                                          AND EF.DAT_FIM_EFEITO >= 
+                                                               C.DAT_FIM_VIG  
+                                                          AND EF.DAT_INI_EFEITO >= '01/03/2018'                                                                  
                                                   CONNECT BY PRIOR TC.COD_CARGO_TRANSF =
                                                               TC.COD_CARGO),
                                                   EF.COD_CARGO) = C.COD_CARGO
@@ -7823,7 +8107,7 @@ SELECT COD_IDE_CLI,
                                       DATA_FIM
                                 from (SELECT distinct AA.DATA_CALCULO,
                                                        1 AS COD_INS,
-                                                       1 AS TIPO_CONTAGEM,
+                                                       PAR_TIPO_CONTAGEM AS TIPO_CONTAGEM,
                                                        1 AS ID_CONTAGEM,
                                                        RF.COD_ENTIDADE,
                                                        RF.COD_IDE_CLI,
@@ -7843,8 +8127,8 @@ SELECT COD_IDE_CLI,
                                               TB_CARGO              C
                                         WHERE RF.COD_INS = PAR_COD_INS
                                           AND RF.COD_IDE_CLI = PAR_COD_IDE_CLI
-                                             ---Yumi em 01/05/2018: comentado para verificar licenca
-                                             --de qualquer vinculo da relacao funcional
+                                             ---Yumi em 01/05/2018: comentado para verificar licença
+                                             --de qualquer vínculo da relacao funcional
                                              --AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                                              --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                                              --AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
@@ -7854,7 +8138,7 @@ SELECT COD_IDE_CLI,
                                           AND RF.NUM_MATRICULA = T.NUM_MATRICULA
                                           AND RF.COD_IDE_REL_FUNC =
                                               T.COD_IDE_REL_FUNC
-                                             --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                             --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                           AND RF.COD_VINCULO not in
                                               ('22', '5', '6')
                                              ------------------------------------------
@@ -7894,6 +8178,9 @@ SELECT COD_IDE_CLI,
                                                               EF.COD_PCCS
                                                           AND TC.COD_ENTIDADE =
                                                               EF.COD_ENTIDADE
+                                                          AND EF.DAT_FIM_EFEITO >= 
+                                                               C.DAT_FIM_VIG 
+                                                          AND EF.DAT_INI_EFEITO >= '01/03/2018'                                                                   
                                                   CONNECT BY PRIOR TC.COD_CARGO_TRANSF =
                                                               TC.COD_CARGO),
                                                   EF.COD_CARGO) = C.COD_CARGO
@@ -7931,7 +8218,7 @@ SELECT COD_IDE_CLI,
                                       DATA_FIM
                                 from (SELECT distinct AA.DATA_CALCULO,
                                                        1 AS COD_INS,
-                                                       1 AS TIPO_CONTAGEM,
+                                                       PAR_TIPO_CONTAGEM AS TIPO_CONTAGEM,
                                                        1 AS ID_CONTAGEM,
                                                        RF.COD_ENTIDADE,
                                                        RF.COD_IDE_CLI,
@@ -7951,8 +8238,8 @@ SELECT COD_IDE_CLI,
                                               TB_CARGO              C
                                         WHERE RF.COD_INS = PAR_COD_INS
                                           AND RF.COD_IDE_CLI = PAR_COD_IDE_CLI
-                                             ---Yumi em 01/05/2018: comentado para verificar licenca
-                                             --de qualquer vinculo da relacao funcional
+                                             ---Yumi em 01/05/2018: comentado para verificar licença
+                                             --de qualquer vínculo da relacao funcional
                                              --AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                                              --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                                              --AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
@@ -7962,7 +8249,7 @@ SELECT COD_IDE_CLI,
                                           AND RF.NUM_MATRICULA = T.NUM_MATRICULA
                                           AND RF.COD_IDE_REL_FUNC =
                                               T.COD_IDE_REL_FUNC
-                                             --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                             --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                           AND RF.COD_VINCULO not in
                                               ('22', '5', '6')
                                              ------------------------------------------
@@ -8002,6 +8289,9 @@ SELECT COD_IDE_CLI,
                                                               EF.COD_PCCS
                                                           AND TC.COD_ENTIDADE =
                                                               EF.COD_ENTIDADE
+                                                          AND EF.DAT_FIM_EFEITO >= 
+                                                               C.DAT_FIM_VIG   
+                                                          AND EF.DAT_INI_EFEITO >= '01/03/2018'                                                                 
                                                   CONNECT BY PRIOR TC.COD_CARGO_TRANSF =
                                                               TC.COD_CARGO),
                                                   EF.COD_CARGO) = C.COD_CARGO
@@ -8037,7 +8327,7 @@ SELECT COD_IDE_CLI,
                                       DATA_FIM
                                 from (SELECT distinct AA.DATA_CALCULO,
                                                        1 AS COD_INS,
-                                                       1 AS TIPO_CONTAGEM,
+                                                       PAR_TIPO_CONTAGEM AS TIPO_CONTAGEM,
                                                        1 AS ID_CONTAGEM,
                                                        RF.COD_ENTIDADE,
                                                        RF.COD_IDE_CLI,
@@ -8057,12 +8347,12 @@ SELECT COD_IDE_CLI,
 
                                         WHERE RF.COD_INS = PAR_COD_INS
                                           AND RF.COD_IDE_CLI = PAR_COD_IDE_CLI
-                                             ---Yumi em 01/05/2018: comentado para verificar licenca
-                                             --de qualquer vinculo da relacao funcional
+                                             ---Yumi em 01/05/2018: comentado para verificar licença
+                                             --de qualquer vínculo da relacao funcional
                                              --AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                                              --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                                              --AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
-                                             --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                             --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                           AND RF.COD_VINCULO not in
                                               ('22', '5', '6')
                                              ------------------------------------------
@@ -8108,6 +8398,9 @@ SELECT COD_IDE_CLI,
                                                               EF.COD_PCCS
                                                           AND TC.COD_ENTIDADE =
                                                               EF.COD_ENTIDADE
+                                                          AND EF.DAT_FIM_EFEITO >= 
+                                                               C.DAT_FIM_VIG  
+                                                          AND EF.DAT_INI_EFEITO >= '01/03/2018'                                                                  
                                                   CONNECT BY PRIOR TC.COD_CARGO_TRANSF =
                                                               TC.COD_CARGO),
                                                   EF.COD_CARGO) = C.COD_CARGO
@@ -8145,7 +8438,7 @@ SELECT COD_IDE_CLI,
                                       DATA_FIM
                                 from (SELECT distinct AA.DATA_CALCULO,
                                                        1 AS COD_INS,
-                                                       1 AS TIPO_CONTAGEM,
+                                                       PAR_TIPO_CONTAGEM AS TIPO_CONTAGEM,
                                                        1 AS ID_CONTAGEM,
                                                        RF.COD_ENTIDADE,
                                                        RF.COD_IDE_CLI,
@@ -8164,12 +8457,12 @@ SELECT COD_IDE_CLI,
                                               TB_CARGO              C
                                         WHERE RF.COD_INS = PAR_COD_INS
                                           AND RF.COD_IDE_CLI = PAR_COD_IDE_CLI
-                                             ---Yumi em 01/05/2018: comentado para verificar licenca
-                                             --de qualquer vinculo da relacao funcional
+                                             ---Yumi em 01/05/2018: comentado para verificar licença
+                                             --de qualquer vínculo da relacao funcional
                                              --AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                                              --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                                              --AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
-                                             --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                             --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                           AND RF.COD_VINCULO not in
                                               ('22', '5', '6')
                                              ------------------------------------------
@@ -8215,6 +8508,9 @@ SELECT COD_IDE_CLI,
                                                               EF.COD_PCCS
                                                           AND TC.COD_ENTIDADE =
                                                               EF.COD_ENTIDADE
+                                                          AND EF.DAT_FIM_EFEITO >= 
+                                                               C.DAT_FIM_VIG  
+                                                          AND EF.DAT_INI_EFEITO >= '01/03/2018'                                                                  
                                                   CONNECT BY PRIOR TC.COD_CARGO_TRANSF =
                                                               TC.COD_CARGO),
                                                   EF.COD_CARGO) = C.COD_CARGO
@@ -8251,7 +8547,7 @@ SELECT COD_IDE_CLI,
                                       DATA_FIM
                                 from (SELECT distinct AA.DATA_CALCULO,
                                                        1 AS COD_INS,
-                                                       1 AS TIPO_CONTAGEM,
+                                                       PAR_TIPO_CONTAGEM AS TIPO_CONTAGEM,
                                                        1 AS ID_CONTAGEM,
                                                        RF.COD_ENTIDADE,
                                                        RF.COD_IDE_CLI,
@@ -8272,12 +8568,12 @@ SELECT COD_IDE_CLI,
                                               TB_CARGO              C
                                         WHERE RF.COD_INS = PAR_COD_INS
                                           AND RF.COD_IDE_CLI = PAR_COD_IDE_CLI
-                                             ---Yumi em 01/05/2018: comentado para verificar licenca
-                                             --de qualquer vinculo da relacao funcional
+                                             ---Yumi em 01/05/2018: comentado para verificar licença
+                                             --de qualquer vínculo da relacao funcional
                                              --AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                                              --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                                              --AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
-                                             --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                             --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                           AND RF.COD_VINCULO not in
                                               ('22', '5', '6')
                                              ------------------------------------------
@@ -8322,6 +8618,9 @@ SELECT COD_IDE_CLI,
                                                               EF.COD_PCCS
                                                           AND TC.COD_ENTIDADE =
                                                               EF.COD_ENTIDADE
+                                                          AND EF.DAT_FIM_EFEITO >= 
+                                                               C.DAT_FIM_VIG 
+                                                          AND EF.DAT_INI_EFEITO >= '01/03/2018'                                                                   
                                                   CONNECT BY PRIOR TC.COD_CARGO_TRANSF =
                                                               TC.COD_CARGO),
                                                   EF.COD_CARGO) = C.COD_CARGO
@@ -8333,7 +8632,7 @@ SELECT COD_IDE_CLI,
                                                       tb_dias_apoio         A,
                                                       tb_motivo_afastamento MO
                                                 WHERE RF.COD_INS = PAR_COD_INS
-                                                     --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                                     --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                                   AND RF.COD_VINCULO not in
                                                       ('22', '5', '6')
                                                      --AND RF.COD_ENTIDADE          = PAR_COD_ENTIDADE
@@ -8383,8 +8682,8 @@ SELECT COD_IDE_CLI,
                                          DATA_FIM
 
                               union
-                              ---Yumi em 01/05/2018: incluido para descontar os dias de descontos
-                              ---relacionados ao historico de tempos averbados
+                              ---Yumi em 01/05/2018: incluído para descontar os dias de descontos
+                              ---relacionados ao histórico de tempos averbados
                               select 'OUTRO' as Tipo,
                                       COD_ENTIDADE,
                                       COD_IDE_CLI,
@@ -8403,7 +8702,7 @@ SELECT COD_IDE_CLI,
                                       DATA_FIM
                                 from (SELECT distinct t1.dat_adm_orig,
                                                         1                    AS COD_INS,
-                                                        1                    AS TIPO_CONTAGEM,
+                                                        PAR_TIPO_CONTAGEM                    AS TIPO_CONTAGEM,
                                                         1                    AS ID_CONTAGEM,
                                                         RF.COD_ENTIDADE,
                                                         RF.COD_IDE_CLI,
@@ -8425,7 +8724,7 @@ SELECT COD_IDE_CLI,
                                       AND RF.NUM_MATRICULA = PAR_NUM_MATRICULA
                                       AND RF.COD_IDE_REL_FUNC =
                                          PAR_COD_IDE_REL_FUNC
-                                        --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                        --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                       AND RF.COD_VINCULO not in ('22', '5', '6')
                                         ------------------------------------------------------
                                       AND T1.COD_INS = RF.COD_INS
@@ -8447,8 +8746,8 @@ SELECT COD_IDE_CLI,
                                                   tb_dias_apoio         A
                                            WHERE RF.COD_INS = 1
                                              AND RF.COD_IDE_CLI = PAR_COD_IDE_CLI
-                                                --Yumi em 01/05/2018: comentado para remover concomitancia
-                                                ---com qualquer vinculo que exista na relacao funcional
+                                                --Yumi em 01/05/2018: comentado para remover concomitância
+                                                ---com qualquer vínculo que exista na relacao funcional
                                                 ---AND RF.COD_ENTIDADE               = PAR_COD_ENTIDADE
                                                 --AND RF.NUM_MATRICULA              = PAR_NUM_MATRICULA
                                                 ---AND RF.COD_IDE_REL_FUNC           = PAR_COD_IDE_REL_FUNC
@@ -8459,7 +8758,7 @@ SELECT COD_IDE_CLI,
                                                  EF.COD_IDE_REL_FUNC
                                              AND RF.COD_IDE_CLI = EF.COD_IDE_CLI
                                              AND RF.COD_ENTIDADE = EF.COD_ENTIDADE
-                                                --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                                --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                              AND RF.COD_VINCULO not in
                                                  ('22', '5', '6')
                                              AND A.DATA_CALCULO >= NVL(PAR_INICIO_PERIODO_LP, A.DATA_CALCULO)
@@ -8528,7 +8827,7 @@ SELECT COD_IDE_CLI,
                                               PAR_NUM_MATRICULA
                                           AND RF.COD_IDE_REL_FUNC =
                                               PAR_COD_IDE_REL_FUNC
-                                             --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                             --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                           AND RF.COD_VINCULO not in
                                               ('22', '5', '6')
                                              ----------------------------------------------------------------
@@ -8556,6 +8855,9 @@ SELECT COD_IDE_CLI,
                                                               EF.COD_PCCS
                                                           AND TC.COD_ENTIDADE =
                                                               EF.COD_ENTIDADE
+                                                          AND EF.DAT_FIM_EFEITO >= 
+                                                               C.DAT_FIM_VIG
+                                                          AND EF.DAT_INI_EFEITO >= '01/03/2018'                                                                    
                                                   CONNECT BY PRIOR TC.COD_CARGO_TRANSF =
                                                               TC.COD_CARGO),
                                                   EF.COD_CARGO) = C.COD_CARGO
@@ -8589,7 +8891,7 @@ SELECT COD_IDE_CLI,
 
                                 from (SELECT distinct AA.DATA_CALCULO,
                                                         1                   AS COD_INS,
-                                                        1                   AS TIPO_CONTAGEM,
+                                                        PAR_TIPO_CONTAGEM                   AS TIPO_CONTAGEM,
                                                         1                   AS ID_CONTAGEM,
                                                         RF.COD_ENTIDADE,
                                                         RF.COD_IDE_CLI,
@@ -8610,7 +8912,7 @@ SELECT COD_IDE_CLI,
                                       AND RF.NUM_MATRICULA = PAR_NUM_MATRICULA
                                       AND RF.COD_IDE_REL_FUNC =
                                          PAR_COD_IDE_REL_FUNC
-                                        --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                        --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                       AND RF.COD_VINCULO not in ('22', '5', '6')
                                         ------------------------------------------------------
                                       AND T.COD_INS = RF.COD_INS
@@ -8629,7 +8931,7 @@ SELECT COD_IDE_CLI,
                                          DATA_INICIO,
                                          DATA_FIM
 
-                              )
+                              ) aa
                        GROUP BY /*id_contagem,*/ COD_IDE_CLI,
                                 NUM_MATRICULA,
                                 COD_IDE_REL_FUNC,
@@ -8925,19 +9227,19 @@ SELECT COD_IDE_CLI,
                                              WHEN CSO.DAT_INICIO =
                                                   T.DAT_ADM_ORIG THEN
                                               'Cargo: ' || UPPER(cso.des_cargo) ||
-                                              chr(10) || 'Certidao n? ' ||
+                                              chr(10) || 'Certidao nº ' ||
                                               T.NUM_CERTIDAO || /*', emissor ' ||
                                                                          (SELECT CO.DES_DESCRICAO
                                                                             FROM TB_CODIGO CO
                                                                            WHERE CO.COD_INS = 0
                                                                              AND CO.COD_NUM = 2378
                                                                              AND CO.COD_PAR = T.COD_EMISSOR) ||*/
-                                              ', Orgao: ' || T.NOM_ORG_EMP /*||
-                                                                         ', inicio em ' ||
+                                              ', Órgao: ' || T.NOM_ORG_EMP /*||
+                                                                         ', início em ' ||
                                                                          TO_CHAR(T.DAT_ADM_ORIG, 'DD/MM/RRRR')*/
                                              /*WHEN CSO.DAT_FIM = T.DAT_DESL_ORIG THEN
                                              'Cargo:'||cso.des_cargo|| chr(10)||
-                                             'Certidao n? ' || T.NUM_CERTIDAO || ', emissor ' ||
+                                             'Certidao nº ' || T.NUM_CERTIDAO || ', emissor ' ||
                                              (SELECT CO.DES_DESCRICAO
                                                 FROM TB_CODIGO CO
                                                WHERE CO.COD_INS = 0
@@ -8979,8 +9281,8 @@ SELECT COD_IDE_CLI,
                                            tb_dias_apoio         A
                                     WHERE RF1.COD_INS = 1
                                       AND RF1.COD_IDE_CLI = RF.COD_IDE_CLI
-                                         --Yumi em 01/05/2018: comentado para remover concomitancia
-                                         ---com qualquer vinculo que exista na relacao funcional
+                                         --Yumi em 01/05/2018: comentado para remover concomitância
+                                         ---com qualquer vínculo que exista na relacao funcional
                                          ---AND RF.COD_ENTIDADE               = &PAR_COD_ENTIDADE
                                          --AND RF.NUM_MATRICULA              = &PAR_NUM_MATRICULA
                                          ---AND RF.COD_IDE_REL_FUNC           = &PAR_COD_IDE_REL_FUNC
@@ -8990,14 +9292,14 @@ SELECT COD_IDE_CLI,
                                           EF1.COD_IDE_REL_FUNC
                                       AND RF1.COD_IDE_CLI = EF1.COD_IDE_CLI
                                       AND RF1.COD_ENTIDADE = EF1.COD_ENTIDADE
-                                         --Yumi em 07/05/2018: Agregado para nao pegar vinculos com cod_vinculo = 22 (cedidos)
+                                         --Yumi em 07/05/2018: Agregado para nao pegar vínculos com cod_vinculo = 22 (cedidos)
                                       AND RF1.COD_VINCULO not in
                                           ('22', '5', '6')
                                       AND EF1.FLG_STATUS = 'V'
                                       AND A.DATA_CALCULO <= CON.DAT_CONTAGEM
                                       AND A.DATA_CALCULO >= EF1.DAT_INI_EFEITO
                                          ---Yumi em 02/05/201*: ajustado pois nao estava pegando tempos averrbados
-                                         --entre periodos de vinculos
+                                         --entre períodos de vínculos
                                          --AND A.DATA_CALCULO <= NVL(EF.DAT_FIM_EFEITO, SYSDATE)
                                       AND A.DATA_CALCULO <=
                                           NVL(RF1.DAT_FIM_EXERC,
@@ -9008,7 +9310,7 @@ SELECT COD_IDE_CLI,
 
                            UNION ALL
                            --------------------------------------------------
-                           -- Detalhe de Relacao Funcional
+                           -- Detalhe de Relaçao Funcional
                            --------------------------------------------------
                            SELECT CSO.DAT_INICIO,
 
@@ -9040,8 +9342,8 @@ SELECT COD_IDE_CLI,
                                                AND CO.COD_NUM = 2019
                                                AND CO.COD_PAR =
                                                    EF.COD_TIPO_DOC_ASSOC) ||
-                                           ' n? ' || EF.NUM_DOC_ASSOC || '. ' ||
-                                           'Publicac?o em ' || ef.dat_pub || '.'
+                                           ' nº ' || EF.NUM_DOC_ASSOC || '. ' ||
+                                           'Publicação em ' || ef.dat_pub || '.'
 
                                           ),
                                           chr(10)) WITHIN GROUP(ORDER BY EF.DAT_INI_EFEITO) AS GLS_DETALHE,
@@ -9055,7 +9357,7 @@ SELECT COD_IDE_CLI,
                            --------------------------------------------------------
                             RF.COD_INS = CON.COD_INS
                          AND RF.COD_IDE_CLI = CON.COD_IDE_CLI
-                           --Yumi em 01/05/2018: comentado para pegar todos os vinculos
+                           --Yumi em 01/05/2018: comentado para pegar todos os vínculos
                            --da relacao funcional
                            --AND RF.COD_ENTIDADE     = &PAR_COD_ENTIDADE
                            --AND RF.NUM_MATRICULA    = &PAR_NUM_MATRICULA
@@ -9068,16 +9370,23 @@ SELECT COD_IDE_CLI,
                          AND RF.COD_IDE_CLI = EF.COD_IDE_CLI
                          AND RF.COD_ENTIDADE = EF.COD_ENTIDADE
                          AND EF.FLG_STATUS = 'V'
-                         AND ((CSO.DAT_INICIO = EF.DAT_INI_EFEITO) OR
+                         /*AND ((CSO.DAT_INICIO = EF.DAT_INI_EFEITO) OR
                             (CSO.DAT_INICIO < EF.DAT_INI_EFEITO AND
                             NVL(EF.DAT_FIM_EFEITO, CON.DAT_FIM) <=
                             CSO.DAT_FIM AND
-                            EF.COD_CARGO IN
+                            EF.COD_CARGO IN*/
+                         AND (CSO.DAT_INICIO <= EF.DAT_FIM_EFEITO OR EF.DAT_FIM_EFEITO IS NULL)
+                         AND ((CSO.DAT_INICIO >= EF.DAT_INI_EFEITO) OR
+                            (CSO.DAT_INICIO < EF.DAT_INI_EFEITO AND
+                            NVL(EF.DAT_FIM_EFEITO, CON.DAT_FIM) <=
+                            CSO.DAT_FIM AND
+                            EF.COD_CARGO IN   
                             (SELECT TC.COD_CARGO_TRANSF
-                                 FROM TB_TRANSF_CARGO TC
+                                 FROM TB_TRANSF_CARGO TC INNER JOIN TB_CARGO CAR ON TC.COD_CARGO_TRANSF = CAR.COD_CARGO
                                 WHERE TC.COD_INS = EF.COD_INS
                                   AND TC.COD_ENTIDADE = EF.COD_ENTIDADE
-                                  AND TC.COD_PCCS = EF.COD_PCCS) AND
+                                  AND TC.COD_PCCS = EF.COD_PCCS
+                                  AND EF.DAT_INI_EFEITO >= CAR.DAT_INI_VIG) AND
                             EF.DAT_INI_EFEITO =
                             (SELECT MIN(EF1.DAT_INI_EFEITO)
                                  FROM TB_EVOLUCAO_FUNCIONAL EF1
@@ -9123,7 +9432,7 @@ SELECT COD_IDE_CLI,
                                                    ' a partir de ' ||
                                                    to_char(EF.DAT_INI_EFEITO,
                                                             'dd/mm/yyyy') ||
-                                                   ' ate ' ||
+                                                   ' até ' ||
                                                    NVL(to_char(EF.DAT_FIM_EFEITO,
                                                                 'dd/mm/yyyy'),
                                                         'a presente data') || '. ' ||
@@ -9133,8 +9442,8 @@ SELECT COD_IDE_CLI,
                                                         AND CO.COD_NUM = 2019
                                                         AND CO.COD_PAR =
                                                             EF.COD_TIPO_DOC_ASSOC) ||
-                                                   ' n? ' || EF.NUM_DOC_ASSOC || '. ' ||
-                                                   'Publicac?o em ' ||
+                                                   ' nº ' || EF.NUM_DOC_ASSOC || '. ' ||
+                                                   'Publicação em ' ||
                                                    ef.dat_pub || '.'),
                                                    CHR(10)) WITHIN GROUP(ORDER BY EF.DAT_INI_EFEITO)
 
@@ -9149,7 +9458,7 @@ SELECT COD_IDE_CLI,
                            --------------------------------------------------------
                             RF.COD_INS = CON.COD_INS
                          AND RF.COD_IDE_CLI = CON.COD_IDE_CLI
-                           --Yumi em 01/05/2018: comentado para pegar todos os vinculos
+                           --Yumi em 01/05/2018: comentado para pegar todos os vínculos
                            --da relacao funcional
                            --AND RF.COD_ENTIDADE     = &PAR_COD_ENTIDADE
                            --AND RF.NUM_MATRICULA    =  &PAR_NUM_MATRICULA
@@ -9161,8 +9470,10 @@ SELECT COD_IDE_CLI,
                          AND RF.COD_IDE_REL_FUNC = EF.COD_IDE_REL_FUNC
                          AND RF.COD_IDE_CLI = EF.COD_IDE_CLI
                          AND RF.COD_ENTIDADE = EF.COD_ENTIDADE
-                         AND EF.DAT_INI_EFEITO BETWEEN CSO.DAT_INICIO AND
+                         AND (EF.DAT_INI_EFEITO BETWEEN CSO.DAT_INICIO AND
                             CSO.DAT_FIM
+                         or CSO.DAT_INICIO BETWEEN EF.DAT_INI_EFEITO AND
+                          NVL(EF.DAT_FIM_EFEITO, CSO.DAT_INICIO))    
                          AND CSO.ID_CONTAGEM = PAR_ID_CONTAGEM
                          AND CSO.ID_CONTAGEM = CON.ID_CONTAGEM
                             GROUP BY CSO.DAT_INICIO
@@ -9221,13 +9532,13 @@ SELECT COD_IDE_CLI,
       from table(v_col_dias_lp) a
      where TIPO_CONTAGEM = 'HIST';
 
-    -- Valor de bruto inicia com o que sobra de periodos de  1825 dias.
+    -- Valor de bruto inicia com o que sobra de períodos de  1825 dias.
     v_qtd_bruto := mod(v_qtd_bruto,1825);
 
     v_dat_ini_itera := v_dat_ini;
     v_dat_ant       := v_dat_ini-1;
 
-    -- Itera colec?o com dias de lp, para pegar o ponto de gerac?o de aquisitivo
+    -- Itera coleção com dias de lp, para pegar o ponto de geração de aquisitivo
     for r in (select DATA_CALCULO,
                      COD_CARGO,
                      max(TIPO_CONTAGEM) as TIPO_CONTAGEM  -- TIpos AFAST / BRUTO / HIST. Se tiver AFAST ignora
@@ -9365,7 +9676,7 @@ PROCEDURE SP_CONTAGEM_DECL_INSS(I_SEQ_CERTIDAO IN NUMBER) AS
   where rf.cod_ins          = PAR_COD_INS
     and rf.cod_regime       = '2' --RGPS
     and rf.cod_plano        = '2' --RGPS
-    and rf.tip_provimento   = '2' --Livre Provimento (cargo em Comiss?o)
+    and rf.tip_provimento   = '2' --Livre Provimento (cargo em Comissão)
     and rf.cod_vinculo      = '8' --Comissionado
     and ef.cod_ins          = rf.cod_ins
     and ef.cod_ide_cli      = rf.cod_ide_cli
@@ -9402,7 +9713,7 @@ select
   where rf.cod_ins          = 1
     and rf.cod_regime       = '2' --RGPS
     and rf.cod_plano        = '2' --RGPS
-    and rf.tip_provimento   = '2' --Livre Provimento (cargo em Comiss?o)
+    and rf.tip_provimento   = '2' --Livre Provimento (cargo em Comissão)
     and rf.cod_vinculo      = '8' --Comissionado
     and ef.cod_ins          = rf.cod_ins
     and ef.cod_ide_cli      = rf.cod_ide_cli
@@ -9712,11 +10023,11 @@ select
          FROM
         (
                            --------------------------------------------------
-                           -- Detalhe de Relacao Funcional
+                           -- Detalhe de Relaçao Funcional
                            --------------------------------------------------
                            SELECT CSO.DAT_INICIO,
 
-                                  'DURANTE O PERIODO DE '||TO_CHAR(CSO.DAT_INICIO, 'DD/MM/YYYY')||
+                                  'DURANTE O PERÍODO DE '||TO_CHAR(CSO.DAT_INICIO, 'DD/MM/YYYY')||
                                                     ' A '||TO_CHAR(CSO.DAT_FIM, 'DD/MM/YYYY') ||
                                   ' (NOMEADO ATRAVES DA '||
                                                         (
@@ -9726,9 +10037,9 @@ select
                                                         AND CO.COD_NUM = 2019
                                                         AND CO.COD_PAR = RF.COD_TIPO_DOC_ASSOC_INI) ||
                                            ' ' || RF.NUM_DOC_ASSOC_INI|| ', ' ||
-                                           'COM PUBLICAC?O EM ' ||
+                                           'COM PUBLICAÇÃO EM ' ||
                                                         TO_CHAR(RF.DAT_PUB_NOMEA, 'DD/MM/YYYY') ||
-                                           ' E EXONERADO ATRAVES DA ' ||
+                                           ' E EXONERADO ATRAVÉS DA ' ||
                                                         (
                                                         SELECT UPPER(CO.DES_DESCRICAO)
                                                         FROM TB_CODIGO CO
@@ -9736,7 +10047,7 @@ select
                                                         AND CO.COD_NUM = 2019
                                                         AND CO.COD_PAR = RF.COD_TIPO_DOC_ASSOC_FIM) ||
                                            ' ' || RF.NUM_DOC_ASSOC_FIM|| ', ' ||
-                                           'COM PUBLICAC?O EM ' ||
+                                           'COM PUBLICAÇÃO EM ' ||
                                                       TO_CHAR(RF.DAT_PUB_FIM_EXERC, 'DD/MM/YYYY') ||').'
                                    AS GLS_DETALHE,
                                   1 as ordem
@@ -9763,10 +10074,11 @@ select
                             CSO.DAT_FIM AND
                             EF.COD_CARGO IN
                             (SELECT TC.COD_CARGO_TRANSF
-                                 FROM TB_TRANSF_CARGO TC
+                                 FROM TB_TRANSF_CARGO TC INNER JOIN TB_CARGO CAR ON TC.COD_CARGO_TRANSF = CAR.COD_CARGO
                                 WHERE TC.COD_INS = EF.COD_INS
                                   AND TC.COD_ENTIDADE = EF.COD_ENTIDADE
-                                  AND TC.COD_PCCS = EF.COD_PCCS) AND
+                                  AND TC.COD_PCCS = EF.COD_PCCS
+                                  AND EF.DAT_INI_EFEITO >= CAR.DAT_INI_VIG) AND
                             EF.DAT_INI_EFEITO =
                             (SELECT MIN(EF1.DAT_INI_EFEITO)
                                  FROM TB_EVOLUCAO_FUNCIONAL EF1
@@ -9805,7 +10117,7 @@ select
       FOR OBS_homol IN
         (
         SELECT
-        'CERTIFICAMOS QUE DURANTE O PERIODO DE 02/09/1991 A 28/02/1995 N?O HOUVE CONTRIBUIC?O PREVIDENCIARIA CONFORME FACULTAVA A LEI MUNICIPAL N? 6.670 DE 18 DE OUTUBRO DE 1991. CERTIFICAMOS AINDA QUE NO PERIODO DE 01/08/2008 A 31/12/2008, AS CONTRIBUIC?ES PREVIDENCIARIAS FORAM RECOLHIDAS PARA O REGIME GERAL DE PREVIDENCIA SOCIAL, NOS TERMOS DO ARTIGO 40, ? 13, DA CONSTITUIC?O FEDERAL E EMENDA CONSTITUCIONAL N? 20, DE 15/12/1998.'
+        'CERTIFICAMOS QUE DURANTE O PERÍODO DE 02/09/1991 A 28/02/1995 NÃO HOUVE CONTRIBUIÇÃO PREVIDENCIÁRIA CONFORME FACULTAVA A LEI MUNICIPAL Nº 6.670 DE 18 DE OUTUBRO DE 1991. CERTIFICAMOS AINDA QUE NO PERÍODO DE 01/08/2008 A 31/12/2008, AS CONTRIBUIÇÕES PREVIDENCIÁRIAS FORAM RECOLHIDAS PARA O REGIME GERAL DE PREVIDÊNCIA SOCIAL, NOS TERMOS DO ARTIGO 40, § 13, DA CONSTITUIÇÃO FEDERAL E EMENDA CONSTITUCIONAL N° 20, DE 15/12/1998.'
         AS OBS
         FROM DUAL
         )
@@ -9922,7 +10234,7 @@ PROCEDURE SP_CONTAGEM_CTC_INSS(I_SEQ_CERTIDAO IN NUMBER) AS
   where rf.cod_ins          = PAR_COD_INS
     --and rf.cod_regime       = '2' --RGPS
     --and rf.cod_plano        = '2' --RGPS
-    and rf.tip_provimento   = '1' --Livre Provimento (cargo em Comiss?o)
+    and rf.tip_provimento   = '2' --Livre Provimento (cargo em Comissão)
     --and rf.cod_vinculo      = '8' --Comissionado
     and ef.cod_ins          = rf.cod_ins
     and ef.cod_ide_cli      = rf.cod_ide_cli
@@ -9960,7 +10272,7 @@ select
   where rf.cod_ins          = 1
     --and rf.cod_regime       = '2' --RGPS
     --and rf.cod_plano        = '2' --RGPS
-    and rf.tip_provimento   = '1' --Livre Provimento (cargo em Comiss?o)
+    and rf.tip_provimento   = '2' --Livre Provimento (cargo em Comissão)
     --and rf.cod_vinculo      = '8' --Comissionado
     and ef.cod_ins          = rf.cod_ins
     and ef.cod_ide_cli      = rf.cod_ide_cli
@@ -10271,7 +10583,7 @@ select
          FROM
         (
                            --------------------------------------------------
-                           -- Detalhe de Relacao Funcional
+                           -- Detalhe de Relaçao Funcional
                            --------------------------------------------------
                            SELECT DISTINCT
                                  CSO.DAT_INICIO,
@@ -10324,7 +10636,7 @@ select
       FOR OBS_homol IN
         (
         SELECT
-        ''--'Durante o periodo de 02/09/1991 a 18/10/1991, de 01/09/1993 a 31/12/1994 e de 01/03/1995 a 31/08/1997, as contribuic?es previdenciarias foram recolhidas para a CAPSCMC (Caixa de Assistencia e Previdencia dos Servidores da Camara Municipal de Campinas), atualmente Instituto de Previdencia Social do Municipio de Campinas ? CAMPREV. Durante o periodo de 19/10/1991 a 31/08/1993 e de 01/01/1995 a 28/02/1995, n?o houve contribuic?o previdenciaria conforme facultava a Lei Municipal n? 6.670 de 18 de outubro de 1991. Durante o periodo de 01/01/2005 a 31/12/2008 as contribuic?es previdenciarias foram recolhidas para o Regime Geral de Previdencia Social, nos termos do Artigo 40, ? 13, da Constituic?o Federal e Emenda Constitucional n? 20, de 15/12/1998. CERTIFICO ainda que a Lei Complementar n? 10 de 30/06/2004, assegura aos servidores do Municipio de Campinas/SP aposentadorias voluntarias, por invalidez e compulsoria, e pens?o por morte, com aproveitamento de tempo de contribuic?o para o Regime Geral de Previdencia Social ou para outro Regime Proprio de Previdencia Social, na forma da contagem reciproca, conforme Lei Federal n? 6.226, de 14/07/75, com alterac?o dada pela Lei Federal n? 6.864, de 01/12/80'
+        'Durante o período de 02/09/1991 a 18/10/1991, de 01/09/1993 a 31/12/1994 e de 01/03/1995 a 31/08/1997, as contribuições previdenciárias foram recolhidas para a CAPSCMC (Caixa de Assistência e Previdência dos Servidores da Câmara Municipal de Campinas), atualmente Instituto de Previdência Social do Município de Campinas ¿ CAMPREV. Durante o período de 19/10/1991 a 31/08/1993 e de 01/01/1995 a 28/02/1995, não houve contribuição previdenciária conforme facultava a Lei Municipal nº 6.670 de 18 de outubro de 1991. Durante o período de 01/01/2005 a 31/12/2008 as contribuições previdenciárias foram recolhidas para o Regime Geral de Previdência Social, nos termos do Artigo 40, § 13, da Constituição Federal e Emenda Constitucional n° 20, de 15/12/1998. CERTIFICO ainda que a Lei Complementar nº 10 de 30/06/2004, assegura aos servidores do Município de Campinas/SP aposentadorias voluntárias, por invalidez e compulsória, e pensão por morte, com aproveitamento de tempo de contribuição para o Regime Geral de Previdência Social ou para outro Regime Próprio de Previdência Social, na forma da contagem recíproca, conforme Lei Federal nº 6.226, de 14/07/75, com alteração dada pela Lei Federal nº 6.864, de 01/12/80'
         AS OBS
         FROM TB_CONTAGEM_SERVIDOR CS
         WHERE CS.ID_CONTAGEM = PAR_ID_CONTAGEM
